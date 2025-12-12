@@ -230,6 +230,9 @@ class HFModelDeployer:
         
         # Use max_model_len if specified, otherwise let trtllm-serve decide
         max_seq_len = self.max_model_len if self.max_model_len else 131072  # 128k
+        # max_num_tokens controls the maximum tokens that can be processed per batch
+        # Should be at least as large as the longest expected prompt
+        max_num_tokens = max_seq_len  # Allow full sequence length per request
         
         # TensorRT-LLM container needs to bind to 0.0.0.0 for external access
         # Use --host 0.0.0.0 to bind to all interfaces, not just localhost
@@ -247,7 +250,7 @@ class HFModelDeployer:
     -p {self.port}:8000 \\
     -v "{self.cache_dir}:/root/.cache/huggingface" \\
     {image} \\
-    trtllm-serve serve {self.model} --max_seq_len {max_seq_len} --host 0.0.0.0"""
+    trtllm-serve serve {self.model} --max_seq_len {max_seq_len} --max_num_tokens {max_num_tokens} --host 0.0.0.0"""
     
     def _build_docker_command(self):
         """Build the appropriate Docker command based on engine."""
