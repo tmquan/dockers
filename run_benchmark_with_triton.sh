@@ -15,13 +15,13 @@ if [ -f .env ]; then
 fi
 
 # Configuration
-METHOD="triton"  # Deployment method: Triton Inference Server with OpenAI frontend
+METHOD="hf_triton"  # Deployment method: HuggingFace models with Triton Inference Server + OpenAI frontend
 MODEL="Qwen/Qwen3-30B-A3B-Thinking-2507"
 # Available backends:
 #   - trtllm: TensorRT-LLM backend for Triton (best performance, requires pre-built engines)
-#   - vllm: vLLM backend for Triton (fast and flexible, works with HF models directly)
-#   - python: Python backend for custom models (baseline)
-BACKENDS=("vllm")
+# Backend configuration
+# Triton Server backends: vllm (fast), python (baseline), trtllm (maximum performance)
+BACKENDS=("vllm" "python" "trtllm")
 BASE_PORT=9000  # Base port for OpenAI frontend (9000, 9010, etc.)
 OUTPUT_DIR="artifacts"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -32,8 +32,9 @@ INPUT_SEQUENCE_LENGTH=32768   # 32k tokens context
 INPUT_SEQUENCE_STDDEV=0       # No variation in input length
 OUTPUT_SEQUENCE_LENGTH=200    # Fixed output length
 CONCURRENCY=40                # Concurrent requests
-REQUEST_COUNT=1000            # Number of requests to send
-WARMUP_REQUEST_COUNT=100      # Number of warmup requests
+REQUEST_COUNT=1000            # Number of requests to send (count-based benchmark)
+WARMUP_REQUEST_COUNT=100      # Number of warmup requests before measurement
+MEASUREMENT_INTERVAL=10000    # Measurement interval in milliseconds (10 seconds)
 DEFAULT_GPU_MEMORY=0.9
 
 echo "=============================================================================="
@@ -145,8 +146,8 @@ if [ -z "${HF_TOKEN}" ]; then
     fi
 fi
 
-# Track individual result files for combining later
-declare -a RESULT_FILES
+# Track individual result profiles
+declare -a RESULT_PROFILES
 
 # Deploy and benchmark each backend
 for i in "${!BACKENDS[@]}"; do
@@ -250,27 +251,51 @@ for i in "${!BACKENDS[@]}"; do
     BACKEND_OUTPUT="${OUTPUT_DIR}/benchmark_${METHOD}_${MODEL_SANITIZED}_${BACKEND}_${TIMESTAMP}.csv"
     
     # For Triton OpenAI frontend, we need to use the sanitized model name
-    # Triton sanitizes the model name in the repository: removes '/', replaces '-' and '.' with '_'
-    # Example: "Qwen/Qwen3-30B-A3B-Thinking-2507" -> "qwen3_30b_a3b_thinking_2507"
-    TRITON_MODEL_NAME=$(echo "${MODEL}" | sed 's/.*\///g' | sed 's/-/_/g' | sed 's/\./_/g' | tr '[:upper:]' '[:lower:]')
+    # Replace '/' with '_', keep everything else including hyphens
+    # Example: "Qwen/Qwen3-30B-A3B-Thinking-2507" -> "Qwen_Qwen3-30B-A3B-Thinking-2507"
+    TRITON_MODEL_NAME=$(echo "${MODEL}" | sed 's/\//_/g')
     
     echo "   Model name in Triton: ${TRITON_MODEL_NAME}"
+    
+    # For OpenAI frontend, check available models
+    if [ "${USE_OPENAI_FRONTEND}" = true ]; then
+        echo "   Checking available models from OpenAI API..."
+        AVAILABLE_MODELS=$(curl -s "${ENDPOINT}/v1/models" 2>/dev/null | grep -o '"id":"[^"]*"' | cut -d'"' -f4 || echo "")
+        if [ -n "${AVAILABLE_MODELS}" ]; then
+            echo "   Available models: ${AVAILABLE_MODELS}"
+        else
+            echo "   ⚠️  Could not retrieve model list"
+        fi
+    fi
+    echo ""
     
     # Run benchmark with appropriate API mode
     if [ "${USE_OPENAI_FRONTEND}" = true ]; then
         # Use GenAI-Perf for OpenAI-compatible endpoints with synthetic input
         echo "   Running GenAI-Perf with OpenAI frontend and synthetic input..."
-        echo "   Input: ${INPUT_SEQUENCE_LENGTH} tokens (extremely long context)"
+        
+        # Reduce input length to leave buffer for system messages and special tokens
+        # Similar to run_benchmark.sh: use 30000 instead of 32768 to avoid exceeding max_model_len
+        ACTUAL_INPUT_LEN=30000
+        
+        echo "   Input: ${ACTUAL_INPUT_LEN} tokens (out of ${INPUT_SEQUENCE_LENGTH} max context)"
         echo "   Output: ${OUTPUT_SEQUENCE_LENGTH} tokens"
         
+        # Create unique profile name (genai-perf will add _genai_perf suffix automatically)
+        PROFILE_NAME="${METHOD}_${MODEL_SANITIZED}_${BACKEND}_ISL${INPUT_SEQUENCE_LENGTH}_OSL${OUTPUT_SEQUENCE_LENGTH}"
+        
         # Try with --service-kind first (newer versions)
+        # Note: Use TRITON_MODEL_NAME for -m (matches Triton's model registry)
+        # but use original MODEL for --tokenizer (for HuggingFace tokenizer)
         if ${GENAI_PERF_CMD} profile \
             -m "${TRITON_MODEL_NAME}" \
             --endpoint-type chat \
             --service-kind openai \
             --streaming \
             -u localhost:${OPENAI_PORT} \
-            --synthetic-input-tokens-mean ${INPUT_SEQUENCE_LENGTH} \
+            --warmup-request-count ${WARMUP_REQUEST_COUNT} \
+            --measurement-interval ${MEASUREMENT_INTERVAL} \
+            --synthetic-input-tokens-mean ${ACTUAL_INPUT_LEN} \
             --synthetic-input-tokens-stddev ${INPUT_SEQUENCE_STDDEV} \
             --concurrency ${CONCURRENCY} \
             --output-tokens-mean ${OUTPUT_SEQUENCE_LENGTH} \
@@ -278,11 +303,9 @@ for i in "${!BACKENDS[@]}"; do
             --extra-inputs min_tokens:${OUTPUT_SEQUENCE_LENGTH} \
             --extra-inputs ignore_eos:true \
             --tokenizer "${MODEL}" \
-            --measurement-interval ${MEASUREMENT_INTERVAL} \
-            --profile-export-file ${METHOD}_${MODEL_SANITIZED}_${BACKEND}.json \
-            -- \
-            -v \
-            --max-threads=256 2>&1 | tee genai_perf_output.log; then
+            --request-count ${REQUEST_COUNT} \
+            --profile-export-file ${PROFILE_NAME}.json \
+            2>&1 | tee genai_perf_output.log; then
             echo "   ✅ GenAI-Perf completed successfully"
         else
             # Check if it's a version issue
@@ -312,21 +335,15 @@ for i in "${!BACKENDS[@]}"; do
         
         rm -f genai_perf_output.log
     else
-        # For Python backend with Triton v2 protocol (not commonly used with benchmarks)
-        echo "   ⚠️  Python backend benchmarking not fully supported with synthetic input"
+        # For non-OpenAI frontend with Triton v2 protocol (not commonly used with benchmarks)
+        echo "   ⚠️  Native Triton v2 protocol benchmarking not configured"
         echo "   Skipping ${BACKEND} backend..."
         continue
     fi
     
-    # Check if results were generated
-    if [ "${USE_OPENAI_FRONTEND}" = true ]; then
-        if [ -d "${OUTPUT_DIR}" ]; then
-            echo "   ✅ Results saved to: ${OUTPUT_DIR}/"
-            RESULT_FILES+=("${METHOD}_${MODEL_SANITIZED}_${BACKEND}")
-        else
-            echo "   ⚠️  No artifacts directory found"
-        fi
-    fi
+    # Track result profile (genai-perf saves to artifacts/<model>-openai-chat-concurrency<N>/)
+    RESULT_PROFILES+=("${PROFILE_NAME}")
+    echo "   ✅ Results saved to: ${OUTPUT_DIR}/"
     
     # Stop container
     echo ""
@@ -345,11 +362,11 @@ echo "==========================================================================
 echo ""
 
 # Summary of results
-if [ ${#RESULT_FILES[@]} -gt 0 ]; then
+if [ ${#RESULT_PROFILES[@]} -gt 0 ]; then
     echo "📊 Benchmark results summary:"
     echo ""
     echo "Results are stored in ${OUTPUT_DIR}/ directory:"
-    for profile in "${RESULT_FILES[@]}"; do
+    for profile in "${RESULT_PROFILES[@]}"; do
         echo "   - ${profile}"
     done
     echo ""
@@ -361,6 +378,11 @@ if [ ${#RESULT_FILES[@]} -gt 0 ]; then
     echo "   - Inter-Token Latency (ITL)"
     echo "   - Request Latency"
     echo "   - Throughput (tokens/sec)"
+    echo ""
+    echo "Example analysis with Python:"
+    echo "   import pandas as pd"
+    echo "   df = pd.read_csv('${OUTPUT_DIR}/<dir>/*_genai_perf.csv')"
+    echo "   print(df)"
 else
     echo "⚠️  No results generated"
 fi

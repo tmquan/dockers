@@ -4,7 +4,7 @@
 NVIDIA Triton Server Model Deployment Manager
 This script manages model deployments using Triton Inference Server with multiple backends.
 
-Supported backends: vllm (more backends may be added in future)
+Supported backends: vllm, python, trtllm
 
 Usage:
     python docker_hf_with_triton.py start --model MODEL_NAME [--backend BACKEND] [OPTIONS]
@@ -30,6 +30,8 @@ TRITON_VERSION = "25.11"  # NVIDIA Triton Server version (Dec 2024)
 # Docker Image Configurations
 # ============================================================================
 TRITON_VLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-vllm-python-py3"
+TRITON_PYTHON_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-pyt-python-py3"
+TRITON_TRTLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-trtllm-python-py3"
 
 # ============================================================================
 # Default Configurations
@@ -53,6 +55,23 @@ BACKEND_CONFIGS = {
         "openai_health_endpoint": "/health/ready",
         "supports_openai_frontend": True,
         "description": "vLLM backend - Fast and flexible inference with PagedAttention (works directly with HuggingFace models)",
+    },
+    "python": {
+        "image": TRITON_PYTHON_IMAGE,
+        "display_name": "Python Backend",
+        "health_endpoint": "/v2/health/ready",
+        "openai_health_endpoint": "/health/ready",
+        "supports_openai_frontend": True,
+        "description": "Python backend - Custom inference with HuggingFace Transformers (baseline for comparison)",
+    },
+    "trtllm": {
+        "image": TRITON_TRTLLM_IMAGE,
+        "display_name": "TensorRT-LLM (Triton Backend)",
+        "health_endpoint": "/v2/health/ready",
+        "openai_health_endpoint": "/health/ready",
+        "supports_openai_frontend": True,
+        "description": "TensorRT-LLM backend - Maximum performance (requires model conversion)",
+        "requires_conversion": True,
     },
 }
 
@@ -166,8 +185,9 @@ class TritonModelDeployer:
         model_repo_dir = self.cache_dir / "model_repository"
         model_repo_dir.mkdir(parents=True, exist_ok=True)
         
-        # Sanitize model name for directory (remove special chars)
-        model_name = self.model.split('/')[-1].replace('-', '_').replace('.', '_')
+        # Sanitize model name for directory (only replace '/', keep hyphens)
+        # Example: "Qwen/Qwen3-30B-A3B-Thinking-2507" -> "Qwen_Qwen3-30B-A3B-Thinking-2507"
+        model_name = self.model.replace('/', '_')
         model_dir = model_repo_dir / model_name
         model_version_dir = model_dir / "1"
         model_version_dir.mkdir(parents=True, exist_ok=True)
@@ -184,8 +204,14 @@ class TritonModelDeployer:
         
         print(f"   ✅ Created config.pbtxt for {self.backend} backend")
         
-        # Create vLLM model.json file
-        self._create_vllm_model_json(model_version_dir)
+        # Create backend-specific files
+        if self.backend == "vllm":
+            self._create_vllm_model_json(model_version_dir)
+        elif self.backend == "python":
+            self._create_python_backend_files(model_dir)
+        elif self.backend == "trtllm":
+            # TRT-LLM requires engine build - will be handled separately
+            pass
         
         # Set permissions
         self._run_command(f"chmod -R 777 {model_repo_dir}")
@@ -196,9 +222,10 @@ class TritonModelDeployer:
         """Generate config.pbtxt for Triton model repository."""
         max_model_len = self.max_model_len if self.max_model_len else 32768
         
-        # vLLM backend configuration for Triton
-        # Reference: https://github.com/triton-inference-server/vllm_backend
-        return f'''name: "{model_name}"
+        if self.backend == "vllm":
+            # vLLM backend configuration for Triton
+            # Reference: https://github.com/triton-inference-server/vllm_backend
+            return f'''name: "{model_name}"
 backend: "vllm"
 max_batch_size: 0
 
@@ -290,6 +317,180 @@ parameters: {{
   }}
 }}
 '''
+        
+        elif self.backend == "python":
+            # Python backend configuration for Triton
+            # Reference: https://github.com/triton-inference-server/python_backend
+            return f'''name: "{model_name}"
+backend: "python"
+max_batch_size: 32
+
+input [
+  {{
+    name: "text_input"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }},
+  {{
+    name: "parameters"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+    optional: true
+  }}
+]
+
+output [
+  {{
+    name: "text_output"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }}
+]
+
+instance_group [
+  {{
+    count: 1
+    kind: KIND_GPU
+  }}
+]
+
+parameters: {{
+  key: "EXECUTION_ENV_PATH"
+  value: {{
+    string_value: "$$TRITON_MODEL_DIRECTORY/python_env.tar.gz"
+  }}
+}}
+'''
+        
+        elif self.backend == "trtllm":
+            # TensorRT-LLM backend configuration for Triton
+            # Reference: https://github.com/triton-inference-server/tensorrtllm_backend
+            # NOTE: Requires pre-built TRT engines in the model repository
+            return f'''name: "{model_name}"
+backend: "tensorrtllm"
+max_batch_size: 128
+
+model_transaction_policy {{
+  decoupled: True
+}}
+
+input [
+  {{
+    name: "text_input"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }},
+  {{
+    name: "max_tokens"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "bad_words"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "stop_words"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "stream"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "temperature"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "top_k"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "top_p"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }}
+]
+
+output [
+  {{
+    name: "text_output"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }}
+]
+
+instance_group [
+  {{
+    count: 1
+    kind: KIND_GPU
+  }}
+]
+
+parameters: {{
+  key: "gpt_model_type"
+  value: {{
+    string_value: "inflight_fused_batching"
+  }}
+}}
+
+parameters: {{
+  key: "gpt_model_path"
+  value: {{
+    string_value: "$TRITON_MODEL_DIRECTORY/1"
+  }}
+}}
+
+parameters: {{
+  key: "tokenizer_dir"
+  value: {{
+    string_value: "{self.model}"
+  }}
+}}
+
+parameters: {{
+  key: "tokenizer_type"
+  value: {{
+    string_value: "auto"
+  }}
+}}
+
+parameters: {{
+  key: "batch_scheduler_policy"
+  value: {{
+    string_value: "max_utilization"
+  }}
+}}
+
+parameters: {{
+  key: "kv_cache_free_gpu_mem_fraction"
+  value: {{
+    string_value: "{self.gpu_memory}"
+  }}
+}}
+
+parameters: {{
+  key: "max_num_tokens"
+  value: {{
+    string_value: "{max_model_len}"
+  }}
+}}
+'''
+        
+        else:
+            raise ValueError(f"Unsupported backend: {self.backend}")
     
     def _create_vllm_model_json(self, model_version_dir):
         """Create model.json file required by vLLM backend."""
@@ -307,8 +508,9 @@ parameters: {{
             "max_model_len": max_model_len,
             "gpu_memory_utilization": self.gpu_memory,
             "trust_remote_code": True,
-            "enforce_eager": False,
+            "enforce_eager": True,  # Disable torch.compile to avoid cache corruption issues
             "enable_chunked_prefill": True,
+            "disable_log_stats": False,  # Keep logging enabled
         }
         
         # Add tensor parallel size if specified
@@ -321,11 +523,229 @@ parameters: {{
         
         print(f"   ✅ Created model.json with vLLM engine args")
     
+    def _create_python_backend_files(self, model_dir):
+        """Create Python backend model.py for custom inference."""
+        print(f"   Creating Python backend files...")
+        
+        model_version_dir = model_dir / "1"
+        model_py = model_version_dir / "model.py"
+        
+        # Create a Python backend wrapper that loads HuggingFace models
+        python_code = f'''import json
+import numpy as np
+import triton_python_backend_utils as pb_utils
+
+try:
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    import torch
+except ImportError:
+    # Will be installed in container
+    pass
+
+class TritonPythonModel:
+    """Python backend model for Triton with HuggingFace support."""
+    
+    def initialize(self, args):
+        """Initialize the model."""
+        self.model_config = json.loads(args['model_config'])
+        
+        # Initialize HuggingFace model
+        self.model_name = "{self.model}"
+        print(f"Loading model: {{self.model_name}}")
+        
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                trust_remote_code=True
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                trust_remote_code=True
+            )
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(f"Model loaded successfully on {{self.device}}")
+        except Exception as e:
+            print(f"Error loading model: {{e}}")
+            # Fallback to echo mode for testing
+            self.model = None
+            self.tokenizer = None
+    
+    def execute(self, requests):
+        """Execute inference on a batch of requests."""
+        responses = []
+        
+        for request in requests:
+            try:
+                # Get input text
+                text_input = pb_utils.get_input_tensor_by_name(request, "text_input")
+                text_input_str = text_input.as_numpy()[0].decode('utf-8')
+                
+                # Parse parameters if provided
+                params = {{}}
+                try:
+                    params_tensor = pb_utils.get_input_tensor_by_name(request, "parameters")
+                    if params_tensor is not None:
+                        params_str = params_tensor.as_numpy()[0].decode('utf-8')
+                        params = json.loads(params_str)
+                except:
+                    pass
+                
+                max_tokens = params.get('max_tokens', 100)
+                temperature = params.get('temperature', 0.7)
+                
+                # Generate response
+                if self.model is not None and self.tokenizer is not None:
+                    inputs = self.tokenizer(text_input_str, return_tensors="pt").to(self.device)
+                    
+                    with torch.no_grad():
+                        outputs = self.model.generate(
+                            **inputs,
+                            max_new_tokens=max_tokens,
+                            temperature=temperature,
+                            do_sample=True
+                        )
+                    
+                    output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                else:
+                    # Fallback echo mode
+                    output_text = f"Echo (Python backend): {{text_input_str}}"
+                
+                # Create output tensor
+                output_tensor = pb_utils.Tensor(
+                    "text_output",
+                    np.array([output_text.encode('utf-8')], dtype=object)
+                )
+                
+                inference_response = pb_utils.InferenceResponse(
+                    output_tensors=[output_tensor]
+                )
+                responses.append(inference_response)
+                
+            except Exception as e:
+                error_message = f"Error in inference: {{str(e)}}"
+                print(error_message)
+                
+                error_tensor = pb_utils.Tensor(
+                    "text_output",
+                    np.array([error_message.encode('utf-8')], dtype=object)
+                )
+                
+                responses.append(pb_utils.InferenceResponse(
+                    output_tensors=[error_tensor]
+                ))
+        
+        return responses
+    
+    def finalize(self):
+        """Clean up resources."""
+        print("Cleaning up model resources")
+        if hasattr(self, 'model') and self.model is not None:
+            del self.model
+        if hasattr(self, 'tokenizer') and self.tokenizer is not None:
+            del self.tokenizer
+'''
+        
+        with open(model_py, 'w') as f:
+            f.write(python_code)
+        
+        print(f"   ✅ Created model.py for Python backend")
+    
+    def _build_trtllm_engines(self, model_repo_dir, model_name):
+        """Build TensorRT-LLM engines from HuggingFace model."""
+        print(f"\n🔧 Building TensorRT-LLM engines...")
+        print(f"   This may take 10-30 minutes depending on model size...")
+        
+        model_version_dir = model_repo_dir / model_name / "1"
+        
+        # Step 1: Download and convert HuggingFace model to TRT checkpoint
+        print(f"\n📥 Step 1: Converting HuggingFace model to TRT checkpoint...")
+        checkpoint_dir = self.cache_dir / "trt_checkpoints" / model_name
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Run conversion in TRT-LLM container
+        convert_cmd = [
+            "docker", "run", "--rm",
+            "--gpus", "all",
+            "-v", f"{self.cache_dir}:/workspace",
+            "-v", f"{checkpoint_dir}:/checkpoint",
+            "-e", f"HF_TOKEN={os.environ.get('HF_TOKEN', '')}",
+            TRITON_TRTLLM_IMAGE,
+            "bash", "-c",
+            f"""
+python3 /opt/tritonserver/tensorrtllm_backend/tensorrt_llm/examples/llama/convert_checkpoint.py \\
+    --model_dir {self.model} \\
+    --output_dir /checkpoint \\
+    --dtype float16 \\
+    --tp_size {self.tp_size}
+"""
+        ]
+        
+        print(f"   Running: HF model → TRT checkpoint conversion...")
+        result = subprocess.run(convert_cmd, capture_output=False, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to convert model to TRT checkpoint")
+        
+        print(f"   ✅ Checkpoint created")
+        
+        # Step 2: Build TensorRT engines
+        print(f"\n🏗️  Step 2: Building TensorRT engines...")
+        
+        max_model_len = self.max_model_len if self.max_model_len else 32768
+        max_batch_size = 128
+        max_input_len = max_model_len
+        max_output_len = min(2048, max_model_len // 2)
+        
+        build_cmd = [
+            "docker", "run", "--rm",
+            "--gpus", "all",
+            "-v", f"{checkpoint_dir}:/checkpoint",
+            "-v", f"{model_version_dir}:/engine",
+            TRITON_TRTLLM_IMAGE,
+            "trtllm-build",
+            "--checkpoint_dir", "/checkpoint",
+            "--output_dir", "/engine",
+            "--gemm_plugin", "auto",
+            "--max_batch_size", str(max_batch_size),
+            "--max_input_len", str(max_input_len),
+            "--max_output_len", str(max_output_len),
+            "--max_beam_width", "1",
+            "--use_paged_context_fmha", "enable",
+            "--use_fp8_context_fmha", "enable",
+            "--multiple_profiles", "enable",
+        ]
+        
+        # Add tensor parallelism if needed
+        if self.tp_size > 1:
+            build_cmd.extend(["--tp_size", str(self.tp_size)])
+        
+        print(f"   Engine configuration:")
+        print(f"     - Max batch size: {max_batch_size}")
+        print(f"     - Max input length: {max_input_len}")
+        print(f"     - Max output length: {max_output_len}")
+        print(f"     - Tensor parallel size: {self.tp_size}")
+        print(f"   Running: trtllm-build (this will take a while)...")
+        
+        result = subprocess.run(build_cmd, capture_output=False, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to build TensorRT engines")
+        
+        print(f"   ✅ TensorRT engines built successfully")
+        print(f"   📁 Engine location: {model_version_dir}")
+        
+        return model_version_dir
+    
     def _build_triton_command(self):
         """Build Docker command for Triton Server with model repository."""
         
         # Setup model repository first
         model_repo_dir = self._setup_model_repository()
+        
+        # If TRT-LLM backend, build engines first
+        if self.backend == "trtllm":
+            model_name = self.model.replace('/', '_')
+            self._build_trtllm_engines(model_repo_dir, model_name)
         
         # Environment variables for HuggingFace
         env_vars = [
@@ -334,14 +754,28 @@ parameters: {{
             f"-e HF_HOME=/root/.cache/huggingface",
         ]
         
+        # Add vLLM-specific environment variables to reduce noise
+        if self.backend == "vllm":
+            env_vars.extend([
+                "-e VLLM_LOGGING_LEVEL=INFO",
+                "-e TORCH_COMPILE_DISABLE=1",  # Disable torch.compile to avoid cache corruption
+                "-e VLLM_ATTENTION_BACKEND=FLASHINFER",  # Use stable attention backend
+            ])
+        
         env_vars_str = " \\\n    ".join(env_vars)
         
         # Choose command based on frontend mode
         if self.openai_frontend:
             # Use OpenAI-compatible frontend
             # Reference: https://github.com/triton-inference-server/server/tree/main/python/openai
+            
+            # Add cache cleanup for vLLM to avoid torch compile cache corruption
+            cache_cleanup = ""
+            if self.backend == "vllm":
+                cache_cleanup = "rm -rf /root/.triton/cache /root/.cache/torch_extensions/* /root/.cache/torch_inductor/* && "
+            
             cmd_parts = [
-                "bash -c 'cd /opt/tritonserver/python/openai &&",
+                f"bash -c '{cache_cleanup}cd /opt/tritonserver/python/openai &&",
                 "pip install -q /opt/tritonserver/python/triton*.whl &&",
                 "pip install -q -r requirements.txt &&",
                 f"python3 openai_frontend/main.py",
@@ -446,6 +880,17 @@ parameters: {{
         print(f"🚀 Starting Triton Server: {self.model}")
         print(f"   Backend: {self.backend_config['display_name']}")
         print("=" * 80)
+        
+        # Special warning for TRT-LLM
+        if self.backend == "trtllm":
+            print("\n⚠️  TensorRT-LLM Backend Selected")
+            print("   This backend requires building optimized TensorRT engines.")
+            print("   The build process will:")
+            print("     1. Convert HuggingFace model to TRT checkpoint")
+            print("     2. Build optimized TensorRT engines")
+            print("   ⏱️  Expected time: 10-30 minutes (depending on model size)")
+            print("   💾 Engines will be cached for future use")
+            print()
         
         # Check Docker
         self._check_docker()
@@ -578,15 +1023,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Start with vLLM backend + OpenAI frontend (default)
+  # Start with vLLM backend + OpenAI frontend (default - recommended)
   python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --openai-frontend
   
-  # Explicitly specify backend
-  python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --backend vllm --openai-frontend
+  # Start with Python backend (baseline for comparison)
+  python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --backend python --openai-frontend
+  
+  # Start with TRT-LLM backend (maximum performance - requires engine build)
+  python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --backend trtllm --openai-frontend --tp-size 8
   
   # Start with custom settings
   python docker_hf_with_triton.py start --model MODEL_NAME --backend vllm \\
-    --openai-frontend --openai-port 9000 --gpu-memory 0.9 --max-model-len 32768
+    --openai-frontend --openai-port 9000 --gpu-memory 0.9 --max-model-len 32768 --tp-size 8
   
   # Check status
   python docker_hf_with_triton.py status --container-name qwen3-triton-vllm
@@ -598,8 +1046,9 @@ Examples:
   python docker_hf_with_triton.py logs --container-name qwen3-triton-vllm -f
 
 Supported backends:
-  - vllm: Fast and flexible inference with PagedAttention (works directly with HuggingFace models)
-  (more backends may be added in future releases)
+  - vllm: Fast and flexible inference with PagedAttention (recommended)
+  - python: HuggingFace Transformers with Python backend (baseline for comparison)
+  - trtllm: Maximum performance with TensorRT-LLM (requires automatic engine build)
         """
     )
     

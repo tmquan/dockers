@@ -245,6 +245,7 @@ for i in "${!ENGINES[@]}"; do
         --service-kind openai \
         --streaming \
         --warmup-request-count ${WARMUP_REQUEST_COUNT} \
+        --measurement-interval ${MEASUREMENT_INTERVAL} \
         --synthetic-input-tokens-mean ${ACTUAL_INPUT_LEN} \
         --synthetic-input-tokens-stddev ${INPUT_SEQUENCE_STDDEV} \
         --concurrency ${CONCURRENCY} \
