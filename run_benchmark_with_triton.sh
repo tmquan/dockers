@@ -18,25 +18,26 @@ fi
 METHOD="triton"  # Deployment method: Triton Inference Server with OpenAI frontend
 MODEL="Qwen/Qwen3-30B-A3B-Thinking-2507"
 # Available backends:
-#   - vllm: vLLM backend for Triton (with OpenAI frontend)
-#   - trtllm: TensorRT-LLM backend for Triton (with OpenAI frontend)
-#   - python: Python backend for custom models (Triton v2 protocol only)
-BACKENDS=("vllm" "trtllm" "python")
+#   - trtllm: TensorRT-LLM backend for Triton (best performance, requires pre-built engines)
+#   - vllm: vLLM backend for Triton (fast and flexible, works with HF models directly)
+#   - python: Python backend for custom models (baseline)
+BACKENDS=("vllm")
 BASE_PORT=9000  # Base port for OpenAI frontend (9000, 9010, etc.)
 OUTPUT_DIR="artifacts"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-# Sanitize model name for filename
 MODEL_NAME=$(echo "${MODEL}" | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]')
 
-# Synthetic input generation parameters (no input file needed!)
-INPUT_SEQUENCE_LENGTH=131072  # 128k tokens for extremely long context
+# Synthetic input generation parameters
+INPUT_SEQUENCE_LENGTH=32768   # 32k tokens context
 INPUT_SEQUENCE_STDDEV=0       # No variation in input length
 OUTPUT_SEQUENCE_LENGTH=200    # Fixed output length
 CONCURRENCY=40                # Concurrent requests
-MEASUREMENT_INTERVAL=30000    # Measurement interval in ms (30 seconds)
+REQUEST_COUNT=1000            # Number of requests to send
+WARMUP_REQUEST_COUNT=100      # Number of warmup requests
+DEFAULT_GPU_MEMORY=0.9
 
 echo "=============================================================================="
-echo "Triton Server Model Benchmark Workflow"
+echo "Triton Server Benchmark with Synthetic Input (32k tokens)"
 echo "=============================================================================="
 echo ""
 echo "Configuration:"
@@ -47,7 +48,8 @@ echo "  Input: SYNTHETIC (${INPUT_SEQUENCE_LENGTH} tokens, stddev: ${INPUT_SEQUE
 echo "  Output Length: ${OUTPUT_SEQUENCE_LENGTH} tokens"
 echo "  Output Directory: ${OUTPUT_DIR}/"
 echo "  Concurrency: ${CONCURRENCY}"
-echo "  Measurement Interval: ${MEASUREMENT_INTERVAL}ms"
+echo "  Request Count: ${REQUEST_COUNT}"
+echo "  Warmup Requests: ${WARMUP_REQUEST_COUNT}"
 echo ""
 
 # Stop all existing Triton containers first for a clean start
@@ -84,7 +86,7 @@ if ! docker info | grep -i nvidia &> /dev/null; then
 fi
 
 if ! command -v genai-perf &> /dev/null; then
-    echo "⚠️  genai-perf not found locally. Will use Docker image: nvcr.io/nvidia/tritonserver:25.11-py3-sdk"
+    echo "⚠️  genai-perf not found locally. Will use Docker image: nvcr.io/nvidia/eval-factory/genai-perf:25.11"
     if ! command -v docker &> /dev/null; then
         echo "❌ Docker not found. Please install Docker or genai-perf (pip install genai-perf)."
         exit 1
@@ -99,7 +101,7 @@ if ! command -v genai-perf &> /dev/null; then
         echo "$NVIDIA_API_KEY" | docker login nvcr.io -u '$oauthtoken' --password-stdin > /dev/null 2>&1 || true
     fi
     
-    GENAI_PERF_CMD="docker run --rm --net=host --gpus=all -v $PWD:/workdir -w /workdir nvcr.io/nvidia/tritonserver:25.11-py3-sdk genai-perf"
+    GENAI_PERF_CMD="docker run --rm --net=host --gpus=all -v $PWD:/workdir -w /workdir nvcr.io/nvidia/eval-factory/genai-perf:25.11 genai-perf"
     echo "   Using Docker-based genai-perf (version 25.11)"
 else
     echo "✅ genai-perf found locally"
@@ -109,11 +111,23 @@ else
     GENAI_PERF_VERSION=$(genai-perf --version 2>&1 | grep -oP '\d+\.\d+' | head -1)
     echo "   Version: ${GENAI_PERF_VERSION:-unknown}"
     
-    # Warn if version might not support --service-kind
-    if [[ -z "$GENAI_PERF_VERSION" ]]; then
-        echo "   ⚠️  Could not detect genai-perf version"
-        echo "   ⚠️  If you get errors, please upgrade: pip install --upgrade genai-perf"
-        echo "   ⚠️  Or use Docker version (uninstall local genai-perf)"
+    # Check if it supports --service-kind (required for our benchmark)
+    if ! genai-perf --help 2>&1 | grep -q "service-kind"; then
+        echo "   ❌ Local genai-perf does NOT support --service-kind argument"
+        echo "   ⚠️  Falling back to Docker-based genai-perf..."
+        
+        if [ -n "$NGC_API_KEY" ]; then
+            echo "   Logging into NVIDIA Container Registry with NGC_API_KEY..."
+            echo "$NGC_API_KEY" | docker login nvcr.io -u '$oauthtoken' --password-stdin > /dev/null 2>&1 || true
+        elif [ -n "$NVIDIA_API_KEY" ]; then
+            echo "   Logging into NVIDIA Container Registry with NVIDIA_API_KEY..."
+            echo "$NVIDIA_API_KEY" | docker login nvcr.io -u '$oauthtoken' --password-stdin > /dev/null 2>&1 || true
+        fi
+        
+        GENAI_PERF_CMD="docker run --rm --net=host --gpus=all -v $PWD:/workdir -w /workdir nvcr.io/nvidia/eval-factory/genai-perf:25.11 genai-perf"
+        echo "   Using Docker-based genai-perf (nvcr.io/nvidia/eval-factory/genai-perf:25.11)"
+    else
+        echo "   ✅ Supports --service-kind argument"
     fi
 fi
 
@@ -142,31 +156,18 @@ for i in "${!BACKENDS[@]}"; do
     GRPC_PORT=$((TRITON_PORT + 1))
     METRICS_PORT=$((TRITON_PORT + 2))
     
-    # Container name format: hf-triton-model-backend
     MODEL_SANITIZED=$(echo "${MODEL}" | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]')
     CONTAINER_NAME="hf-triton-${MODEL_SANITIZED}-${BACKEND}"
     
-    # Python backend doesn't support OpenAI frontend, use native Triton v2 protocol
-    if [ "${BACKEND}" == "python" ]; then
-        USE_OPENAI_FRONTEND=false
-        ENDPOINT="http://localhost:${TRITON_PORT}"
-        HEALTH_ENDPOINT="/v2/health/ready"
-        API_MODE="triton_v2"
-        echo ""
-        echo "=============================================================================="
-        echo "Testing Backend: ${BACKEND} (Triton v2: ${TRITON_PORT})"
-        echo "Note: Python backend uses native Triton v2 protocol"
-        echo "=============================================================================="
-    else
-        USE_OPENAI_FRONTEND=true
-        ENDPOINT="http://localhost:${OPENAI_PORT}"
-        HEALTH_ENDPOINT="/health/ready"
-        API_MODE="openai"
-        echo ""
-        echo "=============================================================================="
-        echo "Testing Backend: ${BACKEND} (OpenAI port: ${OPENAI_PORT})"
-        echo "=============================================================================="
-    fi
+    # All backends use OpenAI frontend for benchmarking
+    USE_OPENAI_FRONTEND=true
+    ENDPOINT="http://localhost:${OPENAI_PORT}"
+    HEALTH_ENDPOINT="/health/ready"
+    
+    echo ""
+    echo "=============================================================================="
+    echo "Testing Backend: ${BACKEND} (OpenAI port: ${OPENAI_PORT})"
+    echo "=============================================================================="
     echo ""
     
     # Stop any existing container
@@ -174,33 +175,20 @@ for i in "${!BACKENDS[@]}"; do
     python docker_hf_with_triton.py stop --container-name "${CONTAINER_NAME}" 2>/dev/null || true
     docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
     
-    # Start container
-    if [ "${USE_OPENAI_FRONTEND}" = true ]; then
-        echo "🚀 Starting Triton container with ${BACKEND} backend + OpenAI frontend..."
-        echo "   This will create model repository and start OpenAI-compatible server"
-        echo ""
-        
-        python docker_hf_with_triton.py start \
-            --model "${MODEL}" \
-            --backend "${BACKEND}" \
-            --openai-frontend \
-            --openai-port "${OPENAI_PORT}" \
-            --max-model-len 131072 \
-            --container-name "${CONTAINER_NAME}"
-    else
-        echo "🚀 Starting Triton container with ${BACKEND} backend (native Triton v2)..."
-        echo "   This will create model repository with custom Python backend"
-        echo ""
-        
-        python docker_hf_with_triton.py start \
-            --model "${MODEL}" \
-            --backend "${BACKEND}" \
-            --port "${TRITON_PORT}" \
-            --grpc-port "${GRPC_PORT}" \
-            --metrics-port "${METRICS_PORT}" \
-            --max-model-len 131072 \
-            --container-name "${CONTAINER_NAME}"
-    fi
+    # All backends use 32k context
+    ACTUAL_MAX_LEN=32768
+    ACTUAL_INPUT_LEN=30000
+    
+    # Start container with OpenAI frontend
+    echo "🚀 Starting Triton container with ${BACKEND} backend + OpenAI frontend..."
+    python docker_hf_with_triton.py start \
+        --model "${MODEL}" \
+        --backend "${BACKEND}" \
+        --openai-frontend \
+        --openai-port "${OPENAI_PORT}" \
+        --max-model-len ${ACTUAL_MAX_LEN} \
+        --gpu-memory ${DEFAULT_GPU_MEMORY} \
+        --container-name "${CONTAINER_NAME}"
     
     # Wait for container to be ready
     if [ "${USE_OPENAI_FRONTEND}" = true ]; then

@@ -32,7 +32,8 @@ INPUT_SEQUENCE_LENGTH=32768   # 32k tokens context
 INPUT_SEQUENCE_STDDEV=0       # No variation in input length
 OUTPUT_SEQUENCE_LENGTH=200    # Fixed output length
 CONCURRENCY=40                # Concurrent requests
-REQUEST_COUNT=100             # Number of requests to send (count-based benchmark)
+REQUEST_COUNT=1000            # Number of requests to send (count-based benchmark)
+WARMUP_REQUEST_COUNT=100      # Number of warmup requests before measurement
 DEFAULT_GPU_MEMORY=0.9
 echo "=============================================================================="
 echo "GenAI-Perf Benchmark with Synthetic Input (32k tokens)"
@@ -239,11 +240,11 @@ for i in "${!ENGINES[@]}"; do
     
     if ${GENAI_PERF_CMD} profile \
         -m "${MODEL}" \
+        -u localhost:${PORT} \
         --endpoint-type chat \
         --service-kind openai \
         --streaming \
-        -u localhost:${PORT} \
-        --warmup-request-count 10 \
+        --warmup-request-count ${WARMUP_REQUEST_COUNT} \
         --synthetic-input-tokens-mean ${ACTUAL_INPUT_LEN} \
         --synthetic-input-tokens-stddev ${INPUT_SEQUENCE_STDDEV} \
         --concurrency ${CONCURRENCY} \
