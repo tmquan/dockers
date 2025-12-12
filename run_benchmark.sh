@@ -8,8 +8,11 @@ set -e
 # Configuration
 METHOD="hf"  # Deployment method: hf (HuggingFace), nim (NVIDIA NIM), unim (Multi-LLM NIM)
 MODEL="Qwen/Qwen3-30B-A3B-Thinking-2507"
-# Available engines: vllm, sglang
-ENGINES=("vllm" "sglang")
+# Available engines:
+#   - vllm: Fast and flexible (recommended for most use cases)
+#   - sglang: Optimized for structured generation  
+#   - trtllm: NVIDIA TensorRT-LLM (best performance)
+ENGINES=("trtllm" "vllm" "sglang")
 BASE_PORT=8000
 INPUT_FILE="input.jsonl"
 OUTPUT_DIR="benchmark_results"
@@ -69,12 +72,13 @@ if ! docker info | grep -i nvidia &> /dev/null; then
 fi
 
 if ! command -v genai-perf &> /dev/null; then
-    echo "⚠️  genai-perf not found. Install with: pip install genai-perf"
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "⚠️  genai-perf not found locally. Will use Docker image: nvcr.io/nvidia/eval-factory/genai-perf:25.11"
+    if ! command -v docker &> /dev/null; then
+        echo "❌ Docker not found. Please install Docker or genai-perf (pip install genai-perf)."
         exit 1
     fi
+else
+    echo "✅ genai-perf found locally"
 fi
 
 if [ ! -f "${INPUT_FILE}" ]; then
@@ -134,8 +138,13 @@ for i in "${!ENGINES[@]}"; do
     WAIT_TIME=0
     
     # Use appropriate health check endpoint based on engine
-    HEALTH_ENDPOINT="/v1/models"
-    MODEL_ENDPOINT="/v1/models"
+    if [ "${ENGINE}" = "trtllm" ]; then
+        HEALTH_ENDPOINT="/health"
+        MODEL_ENDPOINT="/health"
+    else
+        HEALTH_ENDPOINT="/v1/models"
+        MODEL_ENDPOINT="/v1/models"
+    fi
     
     echo "   Checking server health at: ${ENDPOINT}${HEALTH_ENDPOINT}"
     echo "   Checking model availability at: ${ENDPOINT}${MODEL_ENDPOINT}"
@@ -173,50 +182,10 @@ for i in "${!ENGINES[@]}"; do
         continue
     fi
     
-    # Warmup: Send test requests to ensure model is fully loaded
-    echo "🔥 Running warmup requests..."
-    WARMUP_SUCCESS=0
-    WARMUP_ATTEMPTS=5
-    
-    # Use appropriate chat completions endpoint
-    CHAT_ENDPOINT="${ENDPOINT}/v1/chat/completions"
-    
-    for i in $(seq 1 ${WARMUP_ATTEMPTS}); do
-        echo "   Warmup request ${i}/${WARMUP_ATTEMPTS}..."
-        
-        # OpenAI-compatible format for vLLM and SGLang
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${CHAT_ENDPOINT}" \
-            -H "Content-Type: application/json" \
-            -d '{
-                "model": "'"${MODEL}"'",
-                "messages": [{"role": "user", "content": "Hello, respond with OK"}],
-                "max_tokens": 10
-            }' --max-time 30 2>/dev/null)
-        
-        if [ "$HTTP_CODE" = "200" ]; then
-            WARMUP_SUCCESS=$((WARMUP_SUCCESS + 1))
-            echo "   ✅ Warmup request ${i} successful (HTTP ${HTTP_CODE})"
-        else
-            echo "   ⚠️  Warmup request ${i} failed (HTTP ${HTTP_CODE})"
-        fi
-        
-        sleep 2
-    done
-    
-    if [ ${WARMUP_SUCCESS} -lt 3 ]; then
-        echo "❌ Warmup failed: only ${WARMUP_SUCCESS}/${WARMUP_ATTEMPTS} requests successful"
-        echo "   Container may not be ready or API is not responding correctly"
-        python docker_hf.py logs --container-name "${CONTAINER_NAME}" | tail -50
-        python docker_hf.py stop --container-name "${CONTAINER_NAME}"
-        continue
-    fi
-    
-    echo "✅ Warmup complete: ${WARMUP_SUCCESS}/${WARMUP_ATTEMPTS} requests successful"
-    echo "   Model is fully loaded and ready for benchmarking"
-    
-    # Run benchmark
+    # Run benchmark (genai-perf will handle warmup with --warmup-request-count flag)
     echo ""
     echo "📊 Running performance benchmark..."
+    echo "   Note: genai-perf will run 5 warmup requests before measurement"
     
     # Create unique output filename for this engine with method prefix
     ENGINE_OUTPUT="${OUTPUT_DIR}/benchmark_${METHOD}_${MODEL_SANITIZED}_${ENGINE}_${TIMESTAMP}.csv"

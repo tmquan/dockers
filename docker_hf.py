@@ -4,7 +4,7 @@
 HuggingFace Model Deployment Manager
 This script manages the lifecycle of HuggingFace model Docker containers using various inference engines.
 
-Supported engines: vllm, sglang
+Supported engines: vllm, sglang, trtllm
 
 Usage:
     python docker_hf.py start --model MODEL_NAME --engine ENGINE [OPTIONS]
@@ -27,6 +27,7 @@ from pathlib import Path
 # ============================================================================
 VLLM_VERSION = "v0.12.0"  # Supports Qwen3 MoE models (Dec 2024)
 SGLANG_VERSION = "v0.5.6.post2"  # Use latest for newest model support
+TRTLLM_VERSION = "1.2.0rc4"  # NVIDIA TensorRT-LLM 25.11 (recommended for best performance)
 
 # ============================================================================
 # Default Configurations
@@ -49,6 +50,12 @@ ENGINE_CONFIGS = {
         "image": f"lmsysorg/sglang:{SGLANG_VERSION}",
         "health_endpoint": "/v1/models",
         "supports_openai": True,
+    },
+    "trtllm": {
+        "image": f"nvcr.io/nvidia/tensorrt-llm/release:{TRTLLM_VERSION}",
+        "health_endpoint": "/v1/models",
+        "supports_openai": True,
+        "description": "NVIDIA TensorRT-LLM (recommended for best performance)",
     },
 }
 
@@ -212,6 +219,36 @@ class HFModelDeployer:
     {image} \\
     python3 -m sglang.launch_server {' '.join(cmd_args)}"""
     
+    def _build_trtllm_command(self, image):
+        """Build Docker command for NVIDIA TensorRT-LLM engine.
+        
+        Based on: https://nvidia.github.io/TensorRT-LLM/quick-start-guide.html
+        
+        This uses NVIDIA's TensorRT-LLM with trtllm-serve command.
+        Provides best performance for TensorRT-optimized inference.
+        """
+        
+        # Use max_model_len if specified, otherwise let trtllm-serve decide
+        max_seq_len = self.max_model_len if self.max_model_len else 131072  # 128k
+        
+        # TensorRT-LLM container needs to bind to 0.0.0.0 for external access
+        # Use --host 0.0.0.0 to bind to all interfaces, not just localhost
+        return f"""docker run -d \\
+    --name {self.container_name} \\
+    --runtime=nvidia \\
+    --gpus all \\
+    --ipc host \\
+    --ulimit memlock=-1 \\
+    --ulimit stack=67108864 \\
+    --shm-size=16g \\
+    -e HF_TOKEN={os.getenv('HF_TOKEN', '')} \\
+    -e HUGGING_FACE_HUB_TOKEN={os.getenv('HF_TOKEN', '')} \\
+    -e HF_HOME=/root/.cache/huggingface \\
+    -p {self.port}:8000 \\
+    -v "{self.cache_dir}:/root/.cache/huggingface" \\
+    {image} \\
+    trtllm-serve serve {self.model} --max_seq_len {max_seq_len} --host 0.0.0.0"""
+    
     def _build_docker_command(self):
         """Build the appropriate Docker command based on engine."""
         image = self.engine_config["image"]
@@ -220,6 +257,8 @@ class HFModelDeployer:
             return self._build_vllm_command(image)
         elif self.engine == "sglang":
             return self._build_sglang_command(image)
+        elif self.engine == "trtllm":
+            return self._build_trtllm_command(image)
         else:
             raise ValueError(f"Unsupported engine: {self.engine}")
     
@@ -427,7 +466,10 @@ Examples:
   # View logs
   python docker_hf.py logs --container-name qwen3-30b-vllm -f
   
-Supported engines: vllm, sglang
+Supported engines:
+  - vllm: Fast and flexible (recommended for most use cases)
+  - sglang: Optimized for structured generation
+  - trtllm: NVIDIA TensorRT-LLM (best performance)
         """
     )
     

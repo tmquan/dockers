@@ -1,7 +1,6 @@
 # input.jsonl
 input.jsonl
-
-# benchmark_results
+artifacts/
 benchmark_results/
 
 # Byte-compiled / optimized / DLL files

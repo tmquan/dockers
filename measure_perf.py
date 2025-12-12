@@ -25,6 +25,7 @@ DEFAULT_CONCURRENCY = 40
 DEFAULT_REQUEST_COUNT = 100
 DEFAULT_ENDPOINT_TYPE = "chat"
 DEFAULT_STREAMING = False
+GENAI_PERF_IMAGE = "nvcr.io/nvidia/eval-factory/genai-perf:25.11"
 
 class PerformanceMeasure:
     """Manages genai-perf benchmarking and metrics export."""
@@ -112,11 +113,15 @@ class PerformanceMeasure:
         
         # Get genai-perf version
         try:
+            # Try local installation first
             result = self._run_command("genai-perf --version 2>&1 | head -n1")
             if result.returncode == 0:
                 env_info["genai_perf_version"] = result.stdout.strip()
+            else:
+                # If local not available, use Docker image version
+                env_info["genai_perf_version"] = f"Docker: {GENAI_PERF_IMAGE}"
         except:
-            pass
+            env_info["genai_perf_version"] = f"Docker: {GENAI_PERF_IMAGE}"
         
         # Try to get container/engine version
         try:
@@ -132,14 +137,32 @@ class PerformanceMeasure:
         return env_info
     
     def _check_genai_perf(self):
-        """Check if genai-perf is installed."""
+        """Check if genai-perf is installed (locally or via Docker)."""
+        # First check if local installation exists
         result = self._run_command("which genai-perf")
-        if result.returncode != 0:
-            print("\n❌ Error: genai-perf is not installed!")
-            print("   Install it with: pip install genai-perf")
-            print("   Or use the Triton SDK: docker pull nvcr.io/nvidia/tritonserver:24.08-py3-sdk\n")
-            return False
-        return True
+        if result.returncode == 0:
+            print(f"   ✅ Using local genai-perf installation")
+            return True
+        
+        # If not found locally, check if Docker is available
+        docker_check = self._run_command("docker --version")
+        if docker_check.returncode == 0:
+            print(f"   ℹ️  genai-perf not found locally, will use Docker image: {GENAI_PERF_IMAGE}")
+            # Pull the Docker image if not already present
+            print(f"   🔽 Pulling genai-perf Docker image...")
+            pull_result = self._run_command(f"docker pull {GENAI_PERF_IMAGE}", capture_output=False)
+            if pull_result.returncode == 0:
+                print(f"   ✅ genai-perf Docker image ready")
+                return True
+            else:
+                print(f"   ❌ Failed to pull genai-perf Docker image")
+                return False
+        
+        # Neither local nor Docker available
+        print("\n❌ Error: genai-perf is not available!")
+        print("   Option 1: Install locally with: pip install genai-perf")
+        print(f"   Option 2: Ensure Docker is installed (image will be used: {GENAI_PERF_IMAGE})\n")
+        return False
     
     def _check_endpoint(self):
         """Check if the endpoint is accessible."""
@@ -223,28 +246,42 @@ class PerformanceMeasure:
         
         Reference: https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/genai-perf/README.html
         """
+        # Check if genai-perf is available locally
+        has_local_genai_perf = self._run_command("which genai-perf").returncode == 0
+        
         # genai-perf expects base URL without /v1 for OpenAI endpoints
         # It will automatically append /v1/chat/completions
         base_url = self.endpoint.rstrip('/')
         if base_url.endswith('/v1'):
             base_url = base_url[:-3]  # Remove /v1 suffix
         
+        # If using Docker, map localhost to host.docker.internal
+        if not has_local_genai_perf:
+            base_url = base_url.replace('localhost', 'host.docker.internal')
+            base_url = base_url.replace('127.0.0.1', 'host.docker.internal')
+        
+        # Create artifact directory name with method, model, and backend
+        # e.g., artifacts/hf_Qwen_Qwen3-30B-A3B-Thinking-2507_vllm
+        model_sanitized = self.model.replace('/', '_')
+        artifact_dir_name = f"artifacts/{self.method}_{model_sanitized}_{self.backend}"
+        
         # New genai-perf syntax for profile subcommand
         cmd_parts = [
             "genai-perf",
             "profile",
+            "--random-seed 42",
+            "--warmup-request-count 5",
             f"-m {self.model}",
             f"--endpoint-type {self.endpoint_type}",
             f"--url {base_url}",
             f"--concurrency {self.concurrency}",
             f"--request-count {self.request_count}",
-            "--random-seed 42",
-            "--warmup-request-count 5",
+            f"--artifact-dir {artifact_dir_name}",
         ]
         
         # Add backend only for Triton-specific backends
         # triton-trtllm uses Triton Server, so it needs --backend tensorrtllm
-        # For OpenAI-compatible endpoints (vLLM, SGLang, tensorrt-llm direct), omit --backend
+        # For OpenAI-compatible endpoints (vLLM, SGLang, trtllm direct), omit --backend
         if self.backend in ["triton-trtllm"]:
             cmd_parts.append("--backend tensorrtllm")
         
@@ -261,7 +298,25 @@ class PerformanceMeasure:
         # Add extra arguments
         cmd_parts.extend(self.extra_args)
         
-        return " ".join(cmd_parts)
+        genai_perf_cmd = " ".join(cmd_parts)
+        
+        # If genai-perf is not available locally, wrap with Docker
+        if not has_local_genai_perf:
+            # Get absolute path to current directory for mounting
+            current_dir = Path.cwd().absolute()
+            
+            # Build Docker command
+            docker_cmd = f"""docker run --rm \\
+    --network host \\
+    --add-host host.docker.internal:host-gateway \\
+    -v "{current_dir}:/workspace" \\
+    -w /workspace \\
+    {GENAI_PERF_IMAGE} \\
+    {genai_perf_cmd}"""
+            
+            return docker_cmd
+        
+        return genai_perf_cmd
     
     def _parse_genai_perf_output(self, artifacts_dir):
         """Parse genai-perf output and extract metrics."""
@@ -331,6 +386,19 @@ class PerformanceMeasure:
                         "ttft_unit": "ms",
                     })
                 
+                # Inter token latency metrics
+                if "inter_token_latency" in exp:
+                    itl = exp["inter_token_latency"]
+                    metrics.update({
+                        "inter_token_latency_avg": itl.get("mean", 0),
+                        "inter_token_latency_p50": itl.get("p50", 0),
+                        "inter_token_latency_p95": itl.get("p95", 0),
+                        "inter_token_latency_p99": itl.get("p99", 0),
+                        "inter_token_latency_min": itl.get("min", 0),
+                        "inter_token_latency_max": itl.get("max", 0),
+                        "inter_token_latency_unit": "ms",
+                    })
+                
                 # Token metrics
                 if "output_token_throughput" in exp:
                     metrics["output_token_throughput_avg"] = exp["output_token_throughput"].get("mean", 0)
@@ -384,11 +452,13 @@ class PerformanceMeasure:
             "model", "backend", "endpoint_type", "concurrency",
             "request_throughput_avg", "request_latency_avg",
             "request_latency_p50", "request_latency_p95", "request_latency_p99",
-            "ttft_avg", "output_token_throughput_avg",
+            "ttft_avg", "ttft_p50", "ttft_p95", "ttft_unit",
+            "inter_token_latency_avg", "inter_token_latency_p50", "inter_token_latency_p95", "inter_token_latency_p99",
+            "inter_token_latency_min", "inter_token_latency_max", "inter_token_latency_unit",
+            "output_token_throughput_avg",
             "output_seq_len_avg", "input_seq_len_avg", "request_count",
             "request_throughput_unit", "request_latency_min", "request_latency_max",
             "request_latency_std", "request_latency_unit",
-            "ttft_p50", "ttft_p95", "ttft_unit",
             "output_token_throughput_unit",
             "output_seq_len_p50", "output_seq_len_p95",
             "output_seq_len_min", "output_seq_len_max", "output_seq_len_unit",
@@ -462,8 +532,10 @@ class PerformanceMeasure:
         
         print(f"\n✅ Benchmark completed in {elapsed_time:.2f} seconds")
         
-        # Find the artifacts directory (genai-perf creates a timestamped directory)
-        artifacts_dir = Path.cwd() / "artifacts"
+        # Find the artifacts directory (use the custom named directory we specified)
+        model_sanitized = self.model.replace('/', '_')
+        artifacts_dir = Path.cwd() / "artifacts" / f"{self.method}_{model_sanitized}_{self.backend}"
+        
         if not artifacts_dir.exists():
             print(f"   ⚠️  Warning: Artifacts directory not found at {artifacts_dir}")
             print(f"   Metrics export may not be available")
@@ -480,7 +552,14 @@ class PerformanceMeasure:
             print(f"   Request Latency (p50): {metrics.get('request_latency_p50', 'N/A'):.2f} ms")
             print(f"   Request Latency (p95): {metrics.get('request_latency_p95', 'N/A'):.2f} ms")
             print(f"   Request Latency (p99): {metrics.get('request_latency_p99', 'N/A'):.2f} ms")
-            print(f"   TTFT (avg): {metrics.get('ttft_avg', 'N/A'):.2f} ms")
+            print(f"   Time to first token (avg): {metrics.get('ttft_avg', 'N/A'):.2f} ms")
+            print(f"   Time to first token (p50): {metrics.get('ttft_p50', 'N/A'):.2f} ms")
+            print(f"   Time to first token (p95): {metrics.get('ttft_p95', 'N/A'):.2f} ms")
+            if 'inter_token_latency_avg' in metrics and metrics.get('inter_token_latency_avg', 0) > 0:
+                print(f"   Inter token latency (avg): {metrics.get('inter_token_latency_avg', 'N/A'):.2f} ms")
+                print(f"   Inter token latency (p50): {metrics.get('inter_token_latency_p50', 'N/A'):.2f} ms")
+                print(f"   Inter token latency (p95): {metrics.get('inter_token_latency_p95', 'N/A'):.2f} ms")
+                print(f"   Inter token latency (p99): {metrics.get('inter_token_latency_p99', 'N/A'):.2f} ms")
             print(f"   Output Token Throughput: {metrics.get('output_token_throughput_avg', 'N/A'):.2f} tokens/s")
             print(f"   Output Sequence Length (avg): {metrics.get('output_seq_len_avg', 'N/A'):.2f} tokens")
             print(f"   Input Sequence Length (avg): {metrics.get('input_seq_len_avg', 'N/A'):.2f} tokens")
@@ -521,7 +600,7 @@ Examples:
   # Benchmark with custom settings
   python measure_perf.py \
     --model meta-llama/Llama-3-8B \
-    --backend tensorrt-llm \
+    --backend trtllm \
     --endpoint http://localhost:8000/v1 \
     --input prompts.jsonl \
     --output perf_results.csv \
@@ -530,7 +609,7 @@ Examples:
     --streaming
   
   # Multiple backends comparison
-  for backend in vllm tensorrt-llm sglang; do
+  for backend in vllm trtllm sglang; do
     python measure_perf.py \
       --model MODEL_NAME \
       --backend $backend \
@@ -542,7 +621,7 @@ Examples:
     )
     
     parser.add_argument('--model', required=True, help='Model name')
-    parser.add_argument('--backend', required=True, help='Backend/engine name (e.g., vllm, tensorrt-llm, sglang)')
+    parser.add_argument('--backend', required=True, help='Backend/engine name (e.g., vllm, trtllm, sglang)')
     parser.add_argument('--endpoint', required=True, help='API endpoint URL (e.g., http://localhost:8000/v1)')
     parser.add_argument('--input', '--input-file', dest='input_file', required=True, help='Input JSONL file with prompts')
     parser.add_argument('--output', '--output-file', dest='output_file', required=True, help='Output CSV file for metrics')
