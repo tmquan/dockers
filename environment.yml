@@ -1,0 +1,68 @@
+name: hf-deployment
+channels:
+  - conda-forge
+  - defaults
+  - nvidia
+dependencies:
+  # Python
+  - python=3.12
+  
+  # Core dependencies
+  - pip
+  - setuptools
+  - wheel
+  - uv 
+  - requests
+  - openai
+  - pandas
+  - numpy
+  - tqdm
+  - rich
+  - psutil
+  - gpustat
+  
+  # NVIDIA CUDA (optional, for local development)
+  - cudatoolkit=11.8
+  
+  # System utilities
+  - curl
+  - git
+  
+  # Python packages via pip
+  - pip:
+    # GenAI Performance Testing
+    - genai-perf>=0.1.0
+    
+    # Triton Client (for genai-perf)
+    - tritonclient[all]>=2.40.0
+    
+    # Docker Python SDK (for advanced container management)
+    - docker>=6.0.0
+    
+    # HuggingFace libraries
+    - transformers>=4.36.0
+    - tokenizers>=0.15.0
+    - huggingface-hub>=0.20.0
+    
+    # Performance monitoring
+    - psutil>=5.9.0
+    - gpustat>=1.1.0
+    
+    # Data processing
+    - pandas>=2.0.0
+    - numpy>=1.24.0
+    
+    # API clients
+    - requests>=2.31.0
+    - openai>=1.0.0
+    
+    # Utilities
+    - tqdm>=4.65.0
+    - rich>=13.0.0
+    
+    # Optional: vLLM for local testing
+    # - vllm>=0.2.0  # Uncomment if you want to run vLLM directly (not via Docker)
+    
+    # Optional: SGLang for local testing
+    # - sglang>=0.1.0  # Uncomment if you want to run SGLang directly (not via Docker)
+
