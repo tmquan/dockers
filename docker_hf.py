@@ -30,11 +30,18 @@ SGLANG_VERSION = "v0.5.6.post2"  # Use latest for newest model support
 TRTLLM_VERSION = "1.2.0rc4"  # NVIDIA TensorRT-LLM 25.11 (recommended for best performance)
 
 # ============================================================================
+# Docker Image Configurations
+# ============================================================================
+VLLM_IMAGE = f"vllm/vllm-openai:{VLLM_VERSION}"
+SGLANG_IMAGE = f"lmsysorg/sglang:{SGLANG_VERSION}"
+TRTLLM_IMAGE = f"nvcr.io/nvidia/tensorrt-llm/release:{TRTLLM_VERSION}"
+
+# ============================================================================
 # Default Configurations
 # ============================================================================
 DEFAULT_PORT = 8000
-DEFAULT_GPU_MEMORY = 0.85
-DEFAULT_ENGINE = "vllm"
+DEFAULT_GPU_MEMORY = 0.9
+DEFAULT_OPT_ENGINE = "vllm"
 CONTAINER_CACHE_PATH = "/root/.cache/huggingface"
 
 # ============================================================================
@@ -42,27 +49,29 @@ CONTAINER_CACHE_PATH = "/root/.cache/huggingface"
 # ============================================================================
 ENGINE_CONFIGS = {
     "vllm": {
-        "image": f"vllm/vllm-openai:{VLLM_VERSION}",
+        "image": VLLM_IMAGE,
         "health_endpoint": "/v1/models",
         "supports_openai": True,
+        "description": "vLLM - Fast and flexible inference with PagedAttention (recommended for most use cases)",
     },
     "sglang": {
-        "image": f"lmsysorg/sglang:{SGLANG_VERSION}",
+        "image": SGLANG_IMAGE,
         "health_endpoint": "/v1/models",
         "supports_openai": True,
+        "description": "SGLang - Optimized for structured generation and complex prompts",
     },
     "trtllm": {
-        "image": f"nvcr.io/nvidia/tensorrt-llm/release:{TRTLLM_VERSION}",
+        "image": TRTLLM_IMAGE,
         "health_endpoint": "/v1/models",
         "supports_openai": True,
-        "description": "NVIDIA TensorRT-LLM (recommended for best performance)",
+        "description": "NVIDIA TensorRT-LLM - Maximum performance with TensorRT optimizations (best for production)",
     },
 }
 
 class HFModelDeployer:
     """Manages HuggingFace model Docker container lifecycle with multiple engine support."""
     
-    def __init__(self, model, engine=DEFAULT_ENGINE, cache_dir=None, port=DEFAULT_PORT, 
+    def __init__(self, model, engine=DEFAULT_OPT_ENGINE, cache_dir=None, port=DEFAULT_PORT, 
                  gpu_memory=DEFAULT_GPU_MEMORY, container_name=None, tp_size=1, 
                  max_model_len=None, extra_args=None):
         self.model = model
@@ -251,6 +260,7 @@ class HFModelDeployer:
     -v "{self.cache_dir}:/root/.cache/huggingface" \\
     {image} \\
     trtllm-serve serve {self.model} --max_seq_len {max_seq_len} --max_num_tokens {max_num_tokens} --host 0.0.0.0"""
+    
     
     def _build_docker_command(self):
         """Build the appropriate Docker command based on engine."""
@@ -470,20 +480,23 @@ Examples:
   python docker_hf.py logs --container-name qwen3-30b-vllm -f
   
 Supported engines:
-  - vllm: Fast and flexible (recommended for most use cases)
-  - sglang: Optimized for structured generation
-  - trtllm: NVIDIA TensorRT-LLM (best performance)
+  - vllm: Fast and flexible inference with PagedAttention (recommended for most use cases)
+  - sglang: Optimized for structured generation and complex prompts
+  - trtllm: NVIDIA TensorRT-LLM with maximum performance (best for production)
         """
     )
     
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
     
+    # List engines command
+    list_parser = subparsers.add_parser('list-engines', help='List all available inference engines')
+    
     # Start command
     start_parser = subparsers.add_parser('start', help='Start a model container')
     start_parser.add_argument('--model', required=True, help='HuggingFace model name (e.g., meta-llama/Llama-3-8B)')
-    start_parser.add_argument('--engine', default=DEFAULT_ENGINE, 
+    start_parser.add_argument('--engine', default=DEFAULT_OPT_ENGINE, 
                              choices=list(ENGINE_CONFIGS.keys()),
-                             help=f'Inference engine to use (default: {DEFAULT_ENGINE})')
+                             help=f'Inference engine to use (default: {DEFAULT_OPT_ENGINE})')
     start_parser.add_argument('--cache-dir', help='Cache directory (default: .cache/hf in current directory)')
     start_parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'Port to expose (default: {DEFAULT_PORT})')
     start_parser.add_argument('--gpu-memory', type=float, default=DEFAULT_GPU_MEMORY, 
@@ -500,9 +513,9 @@ Supported engines:
     # Restart command
     restart_parser = subparsers.add_parser('restart', help='Restart a model container')
     restart_parser.add_argument('--model', required=True, help='HuggingFace model name')
-    restart_parser.add_argument('--engine', default=DEFAULT_ENGINE, 
+    restart_parser.add_argument('--engine', default=DEFAULT_OPT_ENGINE, 
                                choices=list(ENGINE_CONFIGS.keys()),
-                               help=f'Inference engine to use (default: {DEFAULT_ENGINE})')
+                               help=f'Inference engine to use (default: {DEFAULT_OPT_ENGINE})')
     restart_parser.add_argument('--cache-dir', help='Cache directory (default: .cache/hf in current directory)')
     restart_parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'Port to expose (default: {DEFAULT_PORT})')
     restart_parser.add_argument('--container-name', help='Custom container name')
