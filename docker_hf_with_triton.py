@@ -457,6 +457,30 @@ input [
     data_type: TYPE_FP32
     dims: [ -1 ]
     optional: true
+  }},
+  {{
+    name: "frequency_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "presence_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_input_tokens"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_output_tokens"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
   }}
 ]
 
@@ -709,78 +733,67 @@ class TritonPythonModel:
         
         model_version_dir = model_repo_dir / model_name / "1"
         
-        # Step 1: Download and convert HuggingFace model to TRT checkpoint
-        print(f"\n📥 Step 1: Converting HuggingFace model to TRT checkpoint...")
-        checkpoint_dir = self.cache_dir / "trt_checkpoints" / model_name
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Run conversion in TRT-LLM container
-        # NOTE: Using llama/convert_checkpoint.py - this may need adjustment for other model architectures
-        # For Qwen models, the LLaMA converter typically works due to architectural similarities
-        convert_cmd = [
-            "docker", "run", "--rm",
-            "--gpus", "all",
-            "-v", f"{self.cache_dir}:/workspace",
-            "-v", f"{checkpoint_dir}:/checkpoint",
-            "-e", f"HF_TOKEN={os.environ.get('HF_TOKEN', '')}",
-            TRITON_TRTLLM_IMAGE,
-            "bash", "-c",
-            f"""
-python3 /opt/tritonserver/tensorrtllm_backend/tensorrt_llm/examples/llama/convert_checkpoint.py \\
-    --model_dir {self.model} \\
-    --output_dir /checkpoint \\
-    --dtype float16 \\
-    --tp_size {self.tp_size}
-"""
-        ]
-        
-        print(f"   Running: HF model → TRT checkpoint conversion...")
-        result = subprocess.run(convert_cmd, capture_output=False, text=True)
-        if result.returncode != 0:
-            raise RuntimeError(f"Failed to convert model to TRT checkpoint")
-        
-        print(f"   ✅ Checkpoint created")
-        
-        # Step 2: Build TensorRT engines
-        print(f"\n🏗️  Step 2: Building TensorRT engines...")
+        # Use existing HuggingFace cache
+        print(f"\n🏗️  Building TensorRT engines from cached HuggingFace model...")
         
         max_model_len = self.max_model_len if self.max_model_len else 32768
         max_batch_size = 128
-        max_input_len = max_model_len
-        max_output_len = min(2048, max_model_len // 2)
         
-        build_cmd = [
+        # Find the model in HuggingFace cache
+        model_cache_pattern = self.model.replace('/', '--')
+        
+        build_cmd_parts = [
             "docker", "run", "--rm",
             "--gpus", "all",
-            "-v", f"{checkpoint_dir}:/checkpoint",
+            "-v", f"{self.cache_dir}:/root/.cache/huggingface",
             "-v", f"{model_version_dir}:/engine",
+            "-e", f"HF_TOKEN={os.environ.get('HF_TOKEN', '')}",
+            "-e", f"HF_HOME=/root/.cache/huggingface",
             TRITON_TRTLLM_IMAGE,
-            "trtllm-build",
-            "--checkpoint_dir", "/checkpoint",
-            "--output_dir", "/engine",
-            "--gemm_plugin", "auto",
-            "--max_batch_size", str(max_batch_size),
-            "--max_input_len", str(max_input_len),
-            "--max_output_len", str(max_output_len),
-            "--max_beam_width", "1",
-            "--use_paged_context_fmha", "enable",
-            "--use_fp8_context_fmha", "enable",
-            "--multiple_profiles", "enable",
+            "bash", "-c",
         ]
         
-        # Add tensor parallelism if needed
-        if self.tp_size > 1:
-            build_cmd.extend(["--tp_size", str(self.tp_size)])
+        # Build the bash command to find model and build engine
+        bash_script = f"""
+# Find the cached model directory
+MODEL_DIR=$(find /root/.cache/huggingface/hub -name "models--{model_cache_pattern}" -type d | head -1)
+if [ -z "$MODEL_DIR" ]; then
+    echo "Model not found in cache, downloading..."
+    MODEL_DIR="{self.model}"
+fi
+
+# Find the snapshot directory
+if [ -d "$MODEL_DIR/snapshots" ]; then
+    SNAPSHOT_DIR=$(find "$MODEL_DIR/snapshots" -mindepth 1 -maxdepth 1 -type d | head -1)
+    echo "Using model from: $SNAPSHOT_DIR"
+    MODEL_PATH="$SNAPSHOT_DIR"
+else
+    echo "Using model ID: $MODEL_DIR"
+    MODEL_PATH="$MODEL_DIR"
+fi
+
+# Build TensorRT engine
+trtllm-build \\
+    --checkpoint_dir "$MODEL_PATH" \\
+    --output_dir /engine \\
+    --gemm_plugin auto \\
+    --max_batch_size {max_batch_size} \\
+    --max_input_len {max_model_len} \\
+    --max_seq_len {max_model_len}
+"""
+        
+        build_cmd_parts.append(bash_script)
         
         print(f"   Engine configuration:")
+        print(f"     - Model: {self.model}")
         print(f"     - Max batch size: {max_batch_size}")
-        print(f"     - Max input length: {max_input_len}")
-        print(f"     - Max output length: {max_output_len}")
-        print(f"     - Tensor parallel size: {self.tp_size}")
+        print(f"     - Max sequence length: {max_model_len}")
         print(f"   Running: trtllm-build (this will take a while)...")
         
-        result = subprocess.run(build_cmd, capture_output=False, text=True)
+        result = subprocess.run(build_cmd_parts, capture_output=False, text=True)
         if result.returncode != 0:
+            print(f"\n❌ Engine build failed.")
+            print(f"   TensorRT-LLM may not support this model architecture.")
             raise RuntimeError(f"Failed to build TensorRT engines")
         
         print(f"   ✅ TensorRT engines built successfully")
@@ -938,7 +951,7 @@ python3 /opt/tritonserver/tensorrtllm_backend/tensorrt_llm/examples/llama/conver
             print("\n⚠️  TensorRT-LLM Backend Selected")
             print("   This backend requires building optimized TensorRT engines.")
             print("   The build process will:")
-            print("     1. Convert HuggingFace model to TRT checkpoint")
+            print("     1. Download HuggingFace model")
             print("     2. Build optimized TensorRT engines")
             print("   ⏱️  Expected time: 10-30 minutes (depending on model size)")
             print("   💾 Engines will be cached for future use")

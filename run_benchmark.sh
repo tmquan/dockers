@@ -34,6 +34,7 @@ OUTPUT_SEQUENCE_LENGTH=200    # Fixed output length
 CONCURRENCY=40                # Concurrent requests
 REQUEST_COUNT=1000            # Number of requests to send (count-based benchmark)
 WARMUP_REQUEST_COUNT=100      # Number of warmup requests before measurement
+MEASUREMENT_INTERVAL=10000    # Measurement interval in milliseconds (10 seconds)
 DEFAULT_GPU_MEMORY=0.9
 echo "=============================================================================="
 echo "GenAI-Perf Benchmark with Synthetic Input (32k tokens)"

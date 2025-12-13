@@ -20,9 +20,10 @@ MODEL="Qwen/Qwen3-30B-A3B-Thinking-2507"
 # Available backends:
 #   - trtllm: TensorRT-LLM backend for Triton (best performance, requires pre-built engines)
 # Backend configuration
-# Triton Server backends: vllm (fast), python (baseline), trtllm (maximum performance)
+# Triton Server backends: vllm (fast), python (baseline), trtllm (maximum performance - requires manual conversion)
 # All backends work with OpenAI frontend
-BACKENDS=("python" "trtllm")
+# Note: TRT-LLM disabled - requires model-specific checkpoint conversion
+BACKENDS=("vllm" "python")
 BASE_PORT=9000  # Base port for OpenAI frontend (9000, 9010, etc.)
 OUTPUT_DIR="artifacts"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -281,6 +282,8 @@ for i in "${!BACKENDS[@]}"; do
         
         echo "   Input: ${ACTUAL_INPUT_LEN} tokens (out of ${INPUT_SEQUENCE_LENGTH} max context)"
         echo "   Output: ${OUTPUT_SEQUENCE_LENGTH} tokens"
+        echo "   Measurement interval: ${MEASUREMENT_INTERVAL}ms"
+        echo "   Request count: ${REQUEST_COUNT}"
         
         # Create unique profile name (genai-perf will add _genai_perf suffix automatically)
         PROFILE_NAME="${METHOD}_${MODEL_SANITIZED}_${BACKEND}_ISL${INPUT_SEQUENCE_LENGTH}_OSL${OUTPUT_SEQUENCE_LENGTH}"
