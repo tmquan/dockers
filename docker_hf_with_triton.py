@@ -30,7 +30,8 @@ TRITON_VERSION = "25.11"  # NVIDIA Triton Server version (Dec 2024)
 # Docker Image Configurations
 # ============================================================================
 TRITON_VLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-vllm-python-py3"
-TRITON_PYTHON_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-pyt-python-py3"
+# Python backend uses vLLM image since it includes both Python backend and OpenAI frontend
+TRITON_PYTHON_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-vllm-python-py3"
 TRITON_TRTLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-trtllm-python-py3"
 
 # ============================================================================
@@ -61,7 +62,7 @@ BACKEND_CONFIGS = {
         "display_name": "Python Backend",
         "health_endpoint": "/v2/health/ready",
         "openai_health_endpoint": "/health/ready",
-        "supports_openai_frontend": True,
+        "supports_openai_frontend": True,  # OpenAI frontend works with all Triton backends
         "description": "Python backend - Custom inference with HuggingFace Transformers (baseline for comparison)",
     },
     "trtllm": {
@@ -319,7 +320,7 @@ parameters: {{
 '''
         
         elif self.backend == "python":
-            # Python backend configuration for Triton
+            # Python backend configuration for Triton with OpenAI frontend compatibility
             # Reference: https://github.com/triton-inference-server/python_backend
             return f'''name: "{model_name}"
 backend: "python"
@@ -332,8 +333,50 @@ input [
     dims: [ -1 ]
   }},
   {{
-    name: "parameters"
-    data_type: TYPE_STRING
+    name: "stream"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "max_tokens"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "temperature"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "top_p"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "frequency_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "presence_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_input_tokens"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_output_tokens"
+    data_type: TYPE_BOOL
     dims: [ -1 ]
     optional: true
   }}
@@ -353,13 +396,6 @@ instance_group [
     kind: KIND_GPU
   }}
 ]
-
-parameters: {{
-  key: "EXECUTION_ENV_PATH"
-  value: {{
-    string_value: "$$TRITON_MODEL_DIRECTORY/python_env.tar.gz"
-  }}
-}}
 '''
         
         elif self.backend == "trtllm":
@@ -582,18 +618,31 @@ class TritonPythonModel:
                 text_input = pb_utils.get_input_tensor_by_name(request, "text_input")
                 text_input_str = text_input.as_numpy()[0].decode('utf-8')
                 
-                # Parse parameters if provided
-                params = {{}}
+                # Get optional parameters from OpenAI frontend
+                max_tokens = 100
+                temperature = 0.7
+                top_p = 1.0
+                
                 try:
-                    params_tensor = pb_utils.get_input_tensor_by_name(request, "parameters")
-                    if params_tensor is not None:
-                        params_str = params_tensor.as_numpy()[0].decode('utf-8')
-                        params = json.loads(params_str)
+                    max_tokens_tensor = pb_utils.get_input_tensor_by_name(request, "max_tokens")
+                    if max_tokens_tensor is not None:
+                        max_tokens = int(max_tokens_tensor.as_numpy()[0])
                 except:
                     pass
                 
-                max_tokens = params.get('max_tokens', 100)
-                temperature = params.get('temperature', 0.7)
+                try:
+                    temperature_tensor = pb_utils.get_input_tensor_by_name(request, "temperature")
+                    if temperature_tensor is not None:
+                        temperature = float(temperature_tensor.as_numpy()[0])
+                except:
+                    pass
+                
+                try:
+                    top_p_tensor = pb_utils.get_input_tensor_by_name(request, "top_p")
+                    if top_p_tensor is not None:
+                        top_p = float(top_p_tensor.as_numpy()[0])
+                except:
+                    pass
                 
                 # Generate response
                 if self.model is not None and self.tokenizer is not None:
@@ -604,7 +653,8 @@ class TritonPythonModel:
                             **inputs,
                             max_new_tokens=max_tokens,
                             temperature=temperature,
-                            do_sample=True
+                            top_p=top_p,
+                            do_sample=True if temperature > 0 else False
                         )
                     
                     output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -665,6 +715,8 @@ class TritonPythonModel:
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
         # Run conversion in TRT-LLM container
+        # NOTE: Using llama/convert_checkpoint.py - this may need adjustment for other model architectures
+        # For Qwen models, the LLaMA converter typically works due to architectural similarities
         convert_cmd = [
             "docker", "run", "--rm",
             "--gpus", "all",
@@ -1049,6 +1101,8 @@ Supported backends:
   - vllm: Fast and flexible inference with PagedAttention (recommended)
   - python: HuggingFace Transformers with Python backend (baseline for comparison)
   - trtllm: Maximum performance with TensorRT-LLM (requires automatic engine build)
+  
+Note: All backends work with OpenAI frontend through Triton Server
         """
     )
     
