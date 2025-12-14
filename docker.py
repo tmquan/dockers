@@ -532,6 +532,9 @@ class TritonModelDeployer(BaseModelDeployer):
     def _generate_config_pbtxt(self, model_name):
         """Generate config.pbtxt for Triton model repository."""
         if self.engine == "vllm":
+            # vLLM backend configuration for Triton
+            # Reference: https://github.com/triton-inference-server/vllm_backend
+            # Note: vLLM handles GPU management internally, Triton should only create ONE instance
             return f'''name: "{model_name}"
 backend: "vllm"
 max_batch_size: 0
@@ -571,7 +574,7 @@ output [
 instance_group [
   {{
     count: 1
-    kind: KIND_GPU
+    kind: KIND_MODEL
   }}
 ]
 
@@ -598,6 +601,13 @@ parameters: {{
 
 parameters: {{
   key: "trust_remote_code"
+  value: {{
+    string_value: "true"
+  }}
+}}
+
+parameters: {{
+  key: "enforce_eager"
   value: {{
     string_value: "true"
   }}
@@ -691,14 +701,17 @@ parameters: {{
         """Create model.json file for vLLM backend."""
         print(f"   Creating model.json for vLLM backend...")
         
+        # vLLM engine arguments for Triton backend
+        # Reference: https://github.com/triton-inference-server/vllm_backend
         vllm_engine_args = {
             "model": self.model,
             "dtype": "auto",
             "max_model_len": self.max_model_len,
             "gpu_memory_utilization": self.gpu_memory,
             "trust_remote_code": True,
-            "enforce_eager": True,
+            "enforce_eager": True,  # Disable torch.compile for stability
             "enable_chunked_prefill": True,
+            "disable_log_stats": False,
         }
         
         if self.tp_size > 1:
@@ -785,7 +798,7 @@ class TritonPythonModel:
         if self.openai_frontend:
             cache_cleanup = ""
             if self.engine == "vllm":
-                cache_cleanup = "rm -rf /root/.triton/cache /root/.cache/torch_extensions/* && "
+                cache_cleanup = "rm -rf /root/.triton/cache /root/.cache/torch_extensions/* /root/.cache/torch_inductor/* && "
             
             server_cmd = f"bash -c '{cache_cleanup}cd /opt/tritonserver/python/openai && pip install -q /opt/tritonserver/python/triton*.whl && pip install -q -r requirements.txt && python3 openai_frontend/main.py --model-repository /models --tokenizer {self.model}'"
             port_mappings = f"-p {self.openai_port}:9000"

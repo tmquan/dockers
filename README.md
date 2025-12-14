@@ -2,14 +2,6 @@
 
 This suite provides a unified framework for deploying and benchmarking Large Language Models (LLMs) across multiple deployment methods and inference engines.
 
-## 📚 Documentation
-
-- **[Quick Start Guide](doc/QUICKSTART.md)** - Get started in 5 minutes
-- **[Quick Reference](doc/QUICK_REFERENCE.md)** - Command cheat sheet
-- **[Architecture](doc/ARCHITECTURE.md)** - System design and diagrams
-- **[Complete Documentation Index](doc/INDEX.md)** - All documentation files
-
-## Architecture
 
 ### Core Components
 
@@ -18,7 +10,7 @@ This suite provides a unified framework for deploying and benchmarking Large Lan
    - `HFModelDeployer` - Direct HuggingFace model deployment
    - `TritonModelDeployer` - NVIDIA Triton Inference Server deployment
    - `NIMModelDeployer` - NVIDIA NIM deployment (to be implemented)
-   - `UNIMModelDeployer` - Universal NIM deployment (to be implemented)
+   - `UNIMModelDeployer` - NVIDIA MultiLLM NIM deployment (to be implemented)
 
 2. **`measure.py`** - Performance measurement using GenAI-Perf
    - Supports synthetic input generation (for long contexts)
