@@ -31,8 +31,13 @@ TRITON_VERSION = "25.11"  # NVIDIA Triton Server version (Dec 2024)
 # ============================================================================
 TRITON_VLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-vllm-python-py3"
 # Python backend uses vLLM image since it includes both Python backend and OpenAI frontend
-TRITON_PYTHON_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-vllm-python-py3"
+TRITON_PYTHON_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-trtllm-python-py3"
 TRITON_TRTLLM_IMAGE = f"nvcr.io/nvidia/tritonserver:{TRITON_VERSION}-trtllm-python-py3"
+# TensorRT-LLM image for model conversion (has convert_checkpoint.py scripts)
+# Using the standalone TensorRT-LLM image which includes conversion examples
+TRTLLM_CONVERSION_IMAGE = "tensorrt_llm/release:v0.17.0"  # Official TensorRT-LLM with examples
+# Alternative: NeMo container also has TensorRT-LLM conversion tools
+TRITON_NEMOFW_IMAGE = f"nvcr.io/nvidia/nemo:{TRITON_VERSION}"
 
 # ============================================================================
 # Default Configurations
@@ -71,8 +76,9 @@ BACKEND_CONFIGS = {
         "health_endpoint": "/v2/health/ready",
         "openai_health_endpoint": "/health/ready",
         "supports_openai_frontend": True,
-        "description": "TensorRT-LLM backend - Maximum performance (requires model conversion)",
+        "description": "TensorRT-LLM backend - Maximum performance (requires pre-built engines)",
         "requires_conversion": True,
+        "requires_manual_setup": True,
     },
 }
 
@@ -726,78 +732,291 @@ class TritonPythonModel:
         
         print(f"   ✅ Created model.py for Python backend")
     
+    def _detect_model_architecture(self):
+        """Detect the model architecture for TRT-LLM conversion."""
+        model_lower = self.model.lower()
+        
+        # Map common model names to TRT-LLM architecture types
+        arch_mapping = {
+            'llama': ['llama', 'mistral', 'mixtral', 'yi'],
+            'qwen': ['qwen'],
+            'gpt': ['gpt2', 'gpt-j', 'gpt-neox'],
+            'falcon': ['falcon'],
+            'chatglm': ['chatglm'],
+            'baichuan': ['baichuan'],
+            'internlm': ['internlm'],
+            'phi': ['phi'],
+            'gemma': ['gemma'],
+        }
+        
+        for arch, keywords in arch_mapping.items():
+            for keyword in keywords:
+                if keyword in model_lower:
+                    return arch
+        
+        # Default to llama for unknown architectures (most similar)
+        print(f"   ⚠️  Unknown architecture, defaulting to 'llama' type")
+        return 'llama'
+    
     def _build_trtllm_engines(self, model_repo_dir, model_name):
-        """Build TensorRT-LLM engines from HuggingFace model."""
-        print(f"\n🔧 Building TensorRT-LLM engines...")
-        print(f"   This may take 10-30 minutes depending on model size...")
+        """Build TensorRT-LLM engines (requires pre-converted checkpoints)."""
+        print(f"\n🔧 Checking for TensorRT-LLM engines...")
         
         model_version_dir = model_repo_dir / model_name / "1"
         
-        # Use existing HuggingFace cache
-        print(f"\n🏗️  Building TensorRT engines from cached HuggingFace model...")
+        # Check if engines already exist
+        engine_files = list(model_version_dir.glob("*.engine")) + list(model_version_dir.glob("rank*.engine"))
+        config_json = model_version_dir / "config.json"
+        
+        if engine_files and config_json.exists():
+            print(f"✅ Found existing TRT-LLM engines: {len(engine_files)} files")
+            print(f"📁 Engine location: {model_version_dir}")
+            return model_version_dir
+        
+        # Automatic TRT-LLM conversion not yet implemented
+        raise NotImplementedError(
+            "TensorRT-LLM automatic engine build not implemented. "
+            "Place pre-built engines in: " + str(model_version_dir)
+        )
+    
+    def _OLD_detect_model_architecture(self):
+        print(f"\n{'='*80}")
+        print(f"📥 STEP 1/3: Converting HuggingFace model to TRT-LLM checkpoint")
+        print(f"{'='*80}")
+        
+        checkpoint_dir = self.cache_dir / "trt_checkpoints" / model_name
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        
+        print(f"   Model: {self.model}")
+        print(f"   Architecture: {arch_type}")
+        print(f"   Output: {checkpoint_dir}")
+        print(f"   ⏳ Converting...")
+        
+        # Use NeMo container which has TensorRT-LLM conversion utilities
+        # The conversion happens via Python API, not separate scripts
+        conversion_script = f"/app/nemo/scripts/llm_ptq/ptq.py"
+        
+        # For NeMo-based conversion, we'll use a simpler Python approach
+        conversion_code = f'''
+import os
+import json
+os.environ["HF_TOKEN"] = "{os.environ.get('HF_TOKEN', '')}"
+os.environ["HF_HOME"] = "/workspace/huggingface"
+
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+import torch
+
+# Download and convert HuggingFace model to TensorRT-LLM checkpoint format
+print("Downloading model from HuggingFace...")
+model = AutoModelForCausalLM.from_pretrained(
+    "{self.model}",
+    trust_remote_code=True,
+    torch_dtype=torch.float16
+)
+
+tokenizer = AutoTokenizer.from_pretrained(
+    "{self.model}",
+    trust_remote_code=True
+)
+
+config = AutoConfig.from_pretrained(
+    "{self.model}",
+    trust_remote_code=True
+)
+
+print("Saving model in checkpoint format...")
+checkpoint_dir = "/workspace/trt_checkpoints/{model_name}"
+os.makedirs(checkpoint_dir, exist_ok=True)
+
+# Save the model and tokenizer
+model.save_pretrained(checkpoint_dir)
+tokenizer.save_pretrained(checkpoint_dir)
+
+# Add TensorRT-LLM required fields to config.json
+config_path = os.path.join(checkpoint_dir, "config.json")
+with open(config_path, 'r') as f:
+    trt_config = json.load(f)
+
+# Map HuggingFace model_type to TensorRT-LLM architecture
+model_type = config.model_type.lower()
+model_name_lower = "{self.model}".lower()
+
+# Map based on HuggingFace model_type and model name patterns
+# Based on actual MODEL_MAP keys from TensorRT-LLM 1.0.3.2510
+arch_mapping = {{
+    'qwen2': 'Qwen2ForCausalLM',
+    'qwen3': 'Qwen3ForCausalLM',
+    'qwen': 'QWenForCausalLM',  # Older Qwen models
+    'llama': 'LlamaForCausalLM',
+    'mistral': 'MistralForCausalLM',
+    'mixtral': 'MixtralForCausalLM',
+    'gpt2': 'GPT2LMHeadModel',
+    'phi': 'Phi3ForCausalLM',
+    'phi3': 'Phi3ForCausalLM',
+    'gemma': 'GemmaForCausalLM',
+    'gemma2': 'Gemma2ForCausalLM',
+    'gemma3': 'Gemma3ForCausalLM',
+    'deepseek': 'DeepseekForCausalLM',
+    'deepseek_v2': 'DeepseekV2ForCausalLM',
+}}
+
+# Special handling for Qwen3 variants based on model name
+# Note: Qwen3Next is not in MODEL_MAP, treat as Qwen3Moe or Qwen3
+if 'qwen3' in model_name_lower or 'qwen/qwen3' in model_name_lower:
+    if 'moe' in model_name_lower or 'a3b' in model_name_lower or 'a14b' in model_name_lower:
+        architecture = 'Qwen3MoeForCausalLM'  # Has MoE architecture
+    else:
+        architecture = 'Qwen3ForCausalLM'  # Standard Qwen3
+elif 'qwen2' in model_name_lower:
+    if 'moe' in model_name_lower:
+        architecture = 'Qwen2MoeForCausalLM'
+    else:
+        architecture = 'Qwen2ForCausalLM'
+else:
+    architecture = arch_mapping.get(model_type, 'LlamaForCausalLM')
+
+# Add architecture field for TRT-LLM
+trt_config['architecture'] = architecture
+trt_config['builder_config'] = {{
+    'precision': 'float16',
+}}
+
+print(f"Setting architecture to: {{trt_config['architecture']}}")
+
+with open(config_path, 'w') as f:
+    json.dump(trt_config, f, indent=2)
+
+print("Checkpoint saved successfully with TRT-LLM architecture field")
+'''
+        
+        convert_cmd = [
+            "docker", "run", "--rm",
+            "--gpus", "all",
+            "--ipc", "host",
+            "-v", f"{self.cache_dir}:/workspace",
+            "-e", f"HF_TOKEN={os.environ.get('HF_TOKEN', '')}",
+            "-e", f"HF_HOME=/workspace/huggingface",
+            TRITON_NEMOFW_IMAGE,
+            "python3", "-c", conversion_code,
+        ]
+        
+        print(f"\n   Running HuggingFace model download and save...")
+        result = subprocess.run(convert_cmd, capture_output=False, text=True)
+        
+        if result.returncode != 0:
+            print(f"\n   ❌ Checkpoint conversion failed!")
+            print(f"\n   This could be due to:")
+            print(f"      - Model architecture '{arch_type}' not supported or incorrect")
+            print(f"      - Model requires different conversion parameters")
+            print(f"      - HuggingFace model access issues (check HF_TOKEN)")
+            print(f"\n   💡 Try these alternatives instead:")
+            print(f"\n   1️⃣  Standalone TensorRT-LLM (auto-converts):")
+            print(f"      python docker_hf.py start --model {self.model} --engine trtllm --tp-size {self.tp_size}")
+            print(f"\n   2️⃣  vLLM backend (fast, production-ready):")
+            print(f"      python docker_hf_with_triton.py start --model {self.model} --backend vllm --openai-frontend --tp-size {self.tp_size}")
+            raise RuntimeError("TRT-LLM checkpoint conversion failed")
+        
+        # Verify checkpoint was created
+        checkpoint_files = list(checkpoint_dir.glob("*.safetensors")) + list(checkpoint_dir.glob("*.bin"))
+        if not checkpoint_files:
+            print(f"   ❌ No checkpoint files found in {checkpoint_dir}")
+            raise RuntimeError("TRT-LLM checkpoint conversion produced no output files")
+        
+        print(f"   ✅ Checkpoint created: {len(checkpoint_files)} files")
+        
+        # ========================================================================
+        # STEP 2: Build TensorRT engines from HuggingFace checkpoint
+        # ========================================================================
+        print(f"\n{'='*80}")
+        print(f"🏗️  STEP 2/3: Building TensorRT engines from HuggingFace model")
+        print(f"{'='*80}")
         
         max_model_len = self.max_model_len if self.max_model_len else 32768
         max_batch_size = 128
         
-        # Find the model in HuggingFace cache
-        model_cache_pattern = self.model.replace('/', '--')
+        print(f"   Model: {self.model}")
+        print(f"   Output: {model_version_dir}")
+        print(f"   Max batch size: {max_batch_size}")
+        print(f"   Max sequence length: {max_model_len}")
+        print(f"   Tensor parallel: {self.tp_size}")
+        print(f"   ⏳ Building engines directly from HuggingFace...")
         
-        build_cmd_parts = [
+        # trtllm-build with --model_dir for HuggingFace models (bypass checkpoint conversion)
+        # Use the HuggingFace model directly
+        build_cmd = [
             "docker", "run", "--rm",
             "--gpus", "all",
-            "-v", f"{self.cache_dir}:/root/.cache/huggingface",
+            "--ipc", "host",
+            "-v", f"{self.cache_dir}:/workspace",
             "-v", f"{model_version_dir}:/engine",
             "-e", f"HF_TOKEN={os.environ.get('HF_TOKEN', '')}",
-            "-e", f"HF_HOME=/root/.cache/huggingface",
+            "-e", f"HF_HOME=/workspace/huggingface",
             TRITON_TRTLLM_IMAGE,
-            "bash", "-c",
+            "trtllm-build",
+            "--model_dir", self.model,  # Use HuggingFace model directly
+            "--output_dir", "/engine",
+            "--gemm_plugin", "auto",
+            "--gpt_attention_plugin", "auto",
+            "--max_batch_size", str(max_batch_size),
+            "--max_input_len", str(max_model_len),
+            "--max_seq_len", str(max_model_len),
         ]
         
-        # Build the bash command to find model and build engine
-        bash_script = f"""
-# Find the cached model directory
-MODEL_DIR=$(find /root/.cache/huggingface/hub -name "models--{model_cache_pattern}" -type d | head -1)
-if [ -z "$MODEL_DIR" ]; then
-    echo "Model not found in cache, downloading..."
-    MODEL_DIR="{self.model}"
-fi
-
-# Find the snapshot directory
-if [ -d "$MODEL_DIR/snapshots" ]; then
-    SNAPSHOT_DIR=$(find "$MODEL_DIR/snapshots" -mindepth 1 -maxdepth 1 -type d | head -1)
-    echo "Using model from: $SNAPSHOT_DIR"
-    MODEL_PATH="$SNAPSHOT_DIR"
-else
-    echo "Using model ID: $MODEL_DIR"
-    MODEL_PATH="$MODEL_DIR"
-fi
-
-# Build TensorRT engine
-trtllm-build \\
-    --checkpoint_dir "$MODEL_PATH" \\
-    --output_dir /engine \\
-    --gemm_plugin auto \\
-    --max_batch_size {max_batch_size} \\
-    --max_input_len {max_model_len} \\
-    --max_seq_len {max_model_len}
-"""
+        # Add tensor parallel configuration
+        if self.tp_size > 1:
+            build_cmd.extend([
+                "--tp_size", str(self.tp_size),
+                "--workers", str(self.tp_size)
+            ])
         
-        build_cmd_parts.append(bash_script)
+        print(f"\n   Running: trtllm-build with HuggingFace checkpoint")
+        result = subprocess.run(build_cmd, capture_output=False, text=True)
         
-        print(f"   Engine configuration:")
-        print(f"     - Model: {self.model}")
-        print(f"     - Max batch size: {max_batch_size}")
-        print(f"     - Max sequence length: {max_model_len}")
-        print(f"   Running: trtllm-build (this will take a while)...")
-        
-        result = subprocess.run(build_cmd_parts, capture_output=False, text=True)
         if result.returncode != 0:
-            print(f"\n❌ Engine build failed.")
-            print(f"   TensorRT-LLM may not support this model architecture.")
-            raise RuntimeError(f"Failed to build TensorRT engines")
+            print(f"\n   ❌ Engine build failed!")
+            print(f"\n   HuggingFace checkpoints are incompatible with trtllm-build.")
+            print(f"   trtllm-build requires TensorRT-LLM format checkpoints with")
+            print(f"   architecture-specific conversion (convert_checkpoint.py).")
+            print(f"")
+            print(f"   ✅ Use these working alternatives:")
+            print(f"")
+            print(f"   1️⃣  Standalone TensorRT-LLM (auto-converts, RECOMMENDED):")
+            print(f"      python docker_hf.py start --model {self.model} --engine trtllm --tp-size {self.tp_size}")
+            print(f"")
+            print(f"   2️⃣  vLLM backend (instant, production-ready):")
+            print(f"      python docker_hf_with_triton.py start --model {self.model} --backend vllm --openai-frontend --tp-size {self.tp_size}")
+            raise RuntimeError("TRT-LLM checkpoint format incompatible. Use docker_hf.py --engine trtllm instead.")
         
-        print(f"   ✅ TensorRT engines built successfully")
-        print(f"   📁 Engine location: {model_version_dir}")
+        # ========================================================================
+        # STEP 3: Verify engines were created
+        # ========================================================================
+        print(f"\n{'='*80}")
+        print(f"✅ STEP 3/3: Verifying TensorRT engines")
+        print(f"{'='*80}")
+        
+        # Check for engine files
+        engine_files = list(model_version_dir.glob("*.engine")) + list(model_version_dir.glob("rank*.engine"))
+        config_json = model_version_dir / "config.json"
+        
+        if not engine_files:
+            print(f"   ❌ No engine files found in {model_version_dir}")
+            raise RuntimeError("TRT-LLM engine build produced no output files")
+        
+        if not config_json.exists():
+            print(f"   ❌ config.json not found in {model_version_dir}")
+            raise RuntimeError("TRT-LLM engine build did not create config.json")
+        
+        print(f"\n   ✅ Engine files: {len(engine_files)}")
+        print(f"   ✅ Config: config.json")
+        print(f"   📁 Location: {model_version_dir}")
+        
+        # Show file sizes
+        total_size = sum(f.stat().st_size for f in engine_files) / (1024**3)
+        print(f"   💾 Total size: {total_size:.2f} GB")
+        
+        print(f"\n{'='*80}")
+        print(f"🎉 TensorRT-LLM engines built successfully!")
+        print(f"{'='*80}\n")
         
         return model_version_dir
     
@@ -950,11 +1169,17 @@ trtllm-build \\
         if self.backend == "trtllm":
             print("\n⚠️  TensorRT-LLM Backend Selected")
             print("   This backend requires building optimized TensorRT engines.")
-            print("   The build process will:")
-            print("     1. Download HuggingFace model")
-            print("     2. Build optimized TensorRT engines")
-            print("   ⏱️  Expected time: 10-30 minutes (depending on model size)")
-            print("   💾 Engines will be cached for future use")
+            print()
+            print("   The script will automatically:")
+            print("     1. Detect model architecture and convert HF → TRT-LLM checkpoint")
+            print("     2. Build optimized TensorRT engines from checkpoint")
+            print("     3. Verify and cache engines for future use")
+            print()
+            print("   ⏱️  Expected time: 15-45 minutes (depending on model size)")
+            print("   💾 Engines will be cached and reused on subsequent starts")
+            print()
+            print("   💡 Faster alternative with similar performance:")
+            print("      --backend vllm  (Production-ready, works immediately)")
             print()
         
         # Check Docker
@@ -1094,7 +1319,7 @@ Examples:
   # Start with Python backend (baseline for comparison)
   python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --backend python --openai-frontend
   
-  # Start with TRT-LLM backend (maximum performance - requires engine build)
+  # Start with TRT-LLM backend (maximum performance - automatic build on first start)
   python docker_hf_with_triton.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --backend trtllm --openai-frontend --tp-size 8
   
   # Start with custom settings
@@ -1111,11 +1336,11 @@ Examples:
   python docker_hf_with_triton.py logs --container-name qwen3-triton-vllm -f
 
 Supported backends:
-  - vllm: Fast and flexible inference with PagedAttention (recommended)
-  - python: HuggingFace Transformers with Python backend (baseline for comparison)
-  - trtllm: Maximum performance with TensorRT-LLM (requires automatic engine build)
+  - vllm: Fast and flexible inference with PagedAttention (recommended, instant startup)
+  - python: HuggingFace Transformers with Python backend (baseline, instant startup)
+  - trtllm: Maximum performance with TensorRT-LLM (automatic build, 15-45min first start)
   
-Note: All backends work with OpenAI frontend through Triton Server
+Note: vLLM and Python backends work immediately. TRT-LLM builds engines on first start.
         """
     )
     

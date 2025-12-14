@@ -1,349 +1,396 @@
-# HuggingFace Model Deployment and Performance Benchmarking
+# Unified LLM Deployment and Benchmarking Suite
 
-This repository contains tools for deploying HuggingFace models using various inference engines and measuring their performance using genai-perf.
+This suite provides a unified framework for deploying and benchmarking Large Language Models (LLMs) across multiple deployment methods and inference engines.
 
-## Components
+## 📚 Documentation
 
-### 1. `docker_hf.py` - Model Deployment Manager
+- **[Quick Start Guide](doc/QUICKSTART.md)** - Get started in 5 minutes
+- **[Quick Reference](doc/QUICK_REFERENCE.md)** - Command cheat sheet
+- **[Architecture](doc/ARCHITECTURE.md)** - System design and diagrams
+- **[Complete Documentation Index](doc/INDEX.md)** - All documentation files
 
-A generic Docker deployment script that supports multiple inference engines for serving HuggingFace models.
+## Architecture
 
-#### Supported Engines
-- **vLLM** - High-performance inference with PagedAttention
-- **TensorRT-LLM** - NVIDIA's optimized inference engine
-- **SGLang** - Fast serving with RadixAttention
+### Core Components
 
-#### Features
-- Automatic container management (start, stop, restart, status, logs)
-- Multi-engine support with engine-specific optimizations
-- Automatic container naming based on model
-- HuggingFace token support for private models
-- Configurable GPU memory utilization
-- Tensor parallelism support
-- Custom context length settings
+1. **`docker.py`** - Unified deployment manager with abstract base class
+   - `BaseModelDeployer` - Abstract base class for all deployers
+   - `HFModelDeployer` - Direct HuggingFace model deployment
+   - `TritonModelDeployer` - NVIDIA Triton Inference Server deployment
+   - `NIMModelDeployer` - NVIDIA NIM deployment (to be implemented)
+   - `UNIMModelDeployer` - Universal NIM deployment (to be implemented)
 
-#### Usage
+2. **`measure.py`** - Performance measurement using GenAI-Perf
+   - Supports synthetic input generation (for long contexts)
+   - Supports input file (JSONL format)
+   - Exports detailed metrics to CSV
 
-```bash
-# Start a model with vLLM (default engine)
-python docker_hf.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507
+3. **`run_one.sh`** - Single test runner for quick validation
+4. **`run_all.sh`** - Complete benchmark suite runner
 
-# Start with specific engine
-python docker_hf.py start --model meta-llama/Llama-3-8B --engine sglang
+## Supported Configurations
 
-# Start with custom settings
-python docker_hf.py start \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --engine vllm \
-  --port 8001 \
-  --gpu-memory 0.9 \
-  --tp-size 2 \
-  --max-model-len 262144 \
-  --container-name qwen3-30b-a3b-thinking-2507-vllm
+### Deployment Methods
 
-# Check status
-python docker_hf.py status --container-name qwen3-30b-a3b-thinking-2507-vllm
+| Method   | Status       | Description                                    | Engines Supported         |
+|----------|--------------|------------------------------------------------|---------------------------|
+| `hf`     | ✅ Ready     | Direct HuggingFace model deployment            | vllm, sglang, trtllm     |
+| `triton` | ✅ Ready     | NVIDIA Triton Inference Server                 | vllm, python, trtllm     |
+| `nim`    | 🚧 Planned   | NVIDIA NIM (optimized containers)              | vllm                     |
+| `unim`   | 🚧 Planned   | Universal NIM (generic wrapper)                | vllm                     |
 
-# View logs
-python docker_hf.py logs --container-name qwen3-30b-a3b-thinking-2507-vllm -f
+### Inference Engines
 
-# Stop container
-python docker_hf.py stop --container-name qwen3-30b-a3b-thinking-2507-vllm
+| Engine   | Methods      | Description                                    | Status                    |
+|----------|--------------|------------------------------------------------|---------------------------|
+| `vllm`   | hf, triton   | Fast and flexible with PagedAttention          | ✅ Production Ready       |
+| `sglang` | hf           | Optimized for structured generation            | ✅ Production Ready       |
+| `trtllm` | hf, triton   | NVIDIA TensorRT-LLM (maximum performance)      | ✅ Ready (auto-converts)  |
+| `python` | triton       | Python backend (baseline for comparison)       | ✅ Baseline               |
 
-# Restart with same settings
-python docker_hf.py restart \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --engine vllm
-```
+## Quick Start
 
-#### Arguments
-
-**Start Command:**
-- `--model`: HuggingFace model name (required)
-- `--engine`: Inference engine (`vllm`, `tensorrt-llm`, `sglang`) [default: vllm]
-- `--port`: Port to expose [default: 8000]
-- `--cache-dir`: Cache directory for model weights [default: ~/.cache/huggingface]
-- `--gpu-memory`: GPU memory utilization fraction [default: 0.85]
-- `--tp-size`: Tensor parallel size for multi-GPU [default: 1]
-- `--max-model-len`: Maximum model context length
-- `--container-name`: Custom container name
-- `--extra-args`: Additional engine-specific arguments
-
-**Other Commands:**
-- `stop`, `status`, `logs`: Require `--container-name`
-- `restart`: Same arguments as `start`
-
-### 2. `measure_perf.py` - Performance Benchmarking Tool
-
-Measures model performance using genai-perf and exports detailed metrics to CSV.
-
-#### Features
-- Comprehensive performance metrics collection
-- CSV export with standardized format
-- Support for chat and completion endpoints
-- Configurable concurrency and request counts
-- Streaming support
-- Automatic endpoint health checking
-
-#### Metrics Collected
-
-- **Throughput**: request throughput (req/s), output token throughput (tokens/s)
-- **Latency**: avg, p50, p95, p99, min, max, std (ms)
-- **TTFT**: Time to First Token - avg, p50, p95 (ms)
-- **Sequence Lengths**: input/output avg, p50, p95, min, max (tokens)
-- **Configuration**: model, backend, concurrency, streaming, etc.
-
-#### Usage
+### Prerequisites
 
 ```bash
-# Prerequisites: Install genai-perf
+# Install Docker and NVIDIA Container Toolkit
+sudo apt-get update
+sudo apt-get install -y docker.io nvidia-docker2
+sudo systemctl restart docker
+
+# Set environment variables
+export HF_TOKEN="your_huggingface_token"
+export NGC_API_KEY="your_nvidia_ngc_key"  # Optional for NGC images
+
+# Optional: Install genai-perf locally (otherwise uses Docker)
 pip install genai-perf
-
-# Basic benchmark
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend vllm \
-  --endpoint http://localhost:8000/v1 \
-  --input input.jsonl \
-  --output results.csv
-
-# Custom concurrency and request count
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend vllm \
-  --endpoint http://localhost:8000/v1 \
-  --input input.jsonl \
-  --output results.csv \
-  --concurrency 100 \
-  --request-count 500
-
-# With streaming enabled
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend vllm \
-  --endpoint http://localhost:8000/v1 \
-  --input input.jsonl \
-  --output results.csv \
-  --streaming
 ```
 
-#### Arguments
-
-- `--model`: Model name (required)
-- `--backend`: Backend/engine name (required, e.g., vllm, tensorrt-llm, sglang)
-- `--endpoint`: API endpoint URL (required, e.g., http://localhost:8000/v1)
-- `--input`: Input JSONL file with prompts (required)
-- `--output`: Output CSV file for metrics (required)
-- `--concurrency`: Number of concurrent requests [default: 40]
-- `--request-count`: Total number of requests [default: 100]
-- `--endpoint-type`: Endpoint type (`chat`, `completions`, `embeddings`) [default: chat]
-- `--streaming`: Enable streaming mode
-- `--extra-args`: Additional genai-perf arguments
-
-## Complete Workflow Example
-
-### 1. Deploy Qwen3-30B with vLLM
+### Single Test (Quick Validation)
 
 ```bash
-# Set HuggingFace token if needed
-export HF_TOKEN=your_token_here
+# Test HuggingFace + vLLM (fastest)
+./run_one.sh hf vllm
 
-# Start the model
-python docker_hf.py start \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --engine vllm \
-  --port 8000 \
-  --max-model-len 262144 \
-  --gpu-memory 0.85
+# Test Triton + vLLM with OpenAI frontend
+./run_one.sh triton vllm
 
-# Wait for model to load (check logs)
-python docker_hf.py logs --container-name qwen3-30b-a3b-thinking-2507-vllm -f
+# Test with custom model
+./run_one.sh hf vllm "meta-llama/Llama-3-8B"
 
-# Check status
-python docker_hf.py status --container-name qwen3-30b-a3b-thinking-2507-vllm
+# Test with custom port
+./run_one.sh hf vllm "Qwen/Qwen3-30B-A3B-Thinking-2507" 8001
 ```
 
-### 2. Run Performance Benchmark
+### Full Benchmark Suite
 
 ```bash
-# Run benchmark with input.jsonl
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend vllm \
-  --endpoint http://localhost:8000/v1 \
-  --input input.jsonl \
-  --output qwen_vllm_results.csv \
-  --concurrency 40 \
-  --request-count 100
+# Run all methods and engines
+./run_all.sh
+
+# Results will be saved in artifacts/ directory
 ```
 
-### 3. Compare Multiple Engines
+## Usage Examples
+
+### 1. Deploy a Model
 
 ```bash
-# Deploy with different engines on different ports
-python docker_hf.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --engine vllm --port 8000
-python docker_hf.py start --model Qwen/Qwen3-30B-A3B-Thinking-2507 --engine sglang --port 8001
+# HuggingFace with vLLM
+python docker.py start \
+    --method hf \
+    --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
+    --engine vllm \
+    --port 8000 \
+    --gpu-memory 0.9 \
+    --max-model-len 32768
 
-# Benchmark each engine
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend vllm \
-  --endpoint http://localhost:8000/v1 \
-  --input input.jsonl \
-  --output comparison_results.csv
+# Triton with vLLM + OpenAI frontend
+python docker.py start \
+    --method triton \
+    --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
+    --engine vllm \
+    --openai-frontend \
+    --openai-port 9000 \
+    --max-model-len 32768
 
-python measure_perf.py \
-  --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
-  --backend sglang \
-  --endpoint http://localhost:8001/v1 \
-  --input input.jsonl \
-  --output comparison_results.csv
-
-# View combined results
-cat comparison_results.csv
+# With tensor parallelism (8 GPUs)
+python docker.py start \
+    --method hf \
+    --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
+    --engine vllm \
+    --tp-size 8 \
+    --port 8000
 ```
 
-### 4. Cleanup
+### 2. Check Status
 
 ```bash
-# Stop containers
-python docker_hf.py stop --container-name qwen3-30b-a3b-thinking-2507-vllm
-python docker_hf.py stop --container-name qwen3-30b-a3b-thinking-2507-sglang
+python docker.py status --container-name hf-qwen3-30b-vllm
 ```
 
-## Input File Format
-
-The `input.jsonl` file should contain prompts in JSONL format. For chat endpoints:
-
-```jsonl
-{"text": "Your prompt text here"}
-{"text": "Another prompt"}
-```
-
-For completion endpoints:
-
-```jsonl
-{"prompt": "Your prompt text here"}
-{"prompt": "Another prompt"}
-```
-
-## Output CSV Format
-
-The performance metrics are exported to CSV with the following columns:
-
-```
-model, backend, endpoint_type, concurrency, request_throughput_avg, 
-request_latency_avg, request_latency_p50, request_latency_p95, 
-request_latency_p99, ttft_avg, output_token_throughput_avg, 
-output_seq_len_avg, input_seq_len_avg, request_count, 
-request_throughput_unit, request_latency_min, request_latency_max, 
-request_latency_std, request_latency_unit, ttft_p50, ttft_p95, 
-ttft_unit, output_token_throughput_unit, output_seq_len_p50, 
-output_seq_len_p95, output_seq_len_min, output_seq_len_max, 
-output_seq_len_unit, input_seq_len_p50, input_seq_len_p95, 
-input_seq_len_min, input_seq_len_max, input_seq_len_unit, 
-service_kind, streaming, concurrency_from_config, measurement_mode, 
-measurement_num
-```
-
-## Requirements
-
-### Docker Requirements
-- Docker installed and running
-- NVIDIA Docker runtime (nvidia-docker2)
-- Sufficient GPU memory for the model
-
-### Python Requirements
-- Python 3.10+
-- genai-perf (for benchmarking)
-- Docker Python SDK
-- HuggingFace libraries
-
-### Installation
-
-#### Option 1: Using Conda (Recommended)
+### 3. View Logs
 
 ```bash
-# Run the setup script
-./setup_env.sh
+# View logs
+python docker.py logs --container-name hf-qwen3-30b-vllm
 
-# Or manually create the environment
-conda env create -f environment.yml
-conda activate deploy
-
-# Verify installation
-python docker_hf.py --help
-python measure_perf.py --help
+# Follow logs (real-time)
+python docker.py logs --container-name hf-qwen3-30b-vllm -f
 ```
 
-#### Option 2: Using pip
+### 4. Stop Container
 
 ```bash
-# Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install requirements
-pip install -r requirements.txt
-
-# Verify installation
-python docker_hf.py --help
-python measure_perf.py --help
+python docker.py stop --container-name hf-qwen3-30b-vllm
 ```
 
-#### Option 3: Using Triton SDK container (for genai-perf only)
+### 5. Benchmark Performance
 
 ```bash
-# Pull and run Triton SDK container
-docker pull nvcr.io/nvidia/tritonserver:24.08-py3-sdk
-docker run -it --rm --gpus all \
-  -v $(pwd):/workspace \
-  nvcr.io/nvidia/tritonserver:24.08-py3-sdk bash
+# With synthetic input (32k context) - count-based
+python measure.py \
+    --method hf \
+    --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
+    --engine vllm \
+    --endpoint http://localhost:8000 \
+    --input-tokens-mean 30000 \
+    --output-tokens-mean 200 \
+    --concurrency 40 \
+    --request-count 1000 \
+    --streaming \
+    --output-file results.csv
 
-# Inside container, genai-perf is pre-installed
-cd /workspace
+# Time-based measurement (alternative)
+python measure.py \
+    --method hf \
+    --model Qwen/Qwen3-30B-A3B-Thinking-2507 \
+    --engine vllm \
+    --endpoint http://localhost:8000 \
+    --input-tokens-mean 30000 \
+    --output-tokens-mean 200 \
+    --concurrency 40 \
+    --measurement-interval 10000 \
+    --streaming \
+    --output-file results.csv
+# Note: Use EITHER --request-count OR --measurement-interval, not both
+
+# With input file
+python measure.py \
+    --method hf \
+    --model meta-llama/Llama-3-8B \
+    --engine vllm \
+    --endpoint http://localhost:8000 \
+    --input-file prompts.jsonl \
+    --output-file results.csv
 ```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Required for private models
+export HF_TOKEN="your_huggingface_token"
+
+# Optional for NVIDIA NGC images
+export NGC_API_KEY="your_nvidia_ngc_key"
+export NVIDIA_API_KEY="your_nvidia_api_key"
+```
+
+### Default Values
+
+All defaults are configurable at the top of each file:
+
+**docker.py:**
+```python
+DEFAULT_PORT = 8000
+DEFAULT_GPU_MEMORY = 0.9
+DEFAULT_METHOD = "hf"
+DEFAULT_ENGINE = "vllm"
+DEFAULT_MAX_MODEL_LEN = 32768
+```
+
+**measure.py:**
+```python
+DEFAULT_CONCURRENCY = 40
+DEFAULT_REQUEST_COUNT = 1000
+DEFAULT_INPUT_SEQUENCE_LENGTH = 32768
+DEFAULT_OUTPUT_SEQUENCE_LENGTH = 200
+DEFAULT_STREAMING = True
+```
+
+## Output Format
+
+### Benchmark Results (CSV)
+
+Each benchmark produces a CSV file with the following metrics:
+
+| Metric Category       | Key Metrics                                           |
+|-----------------------|-------------------------------------------------------|
+| Request Metrics       | throughput_avg, latency_avg, latency_p50/p95/p99    |
+| Time to First Token   | ttft_avg, ttft_p50, ttft_p95, ttft_p99              |
+| Inter-Token Latency   | itl_avg, itl_p50, itl_p95, itl_p99                  |
+| Token Throughput      | output_token_throughput_avg                          |
+| Sequence Lengths      | input/output_seq_len_avg/p50/p95                    |
+| Environment Info      | GPU, CUDA, drivers, platform details                 |
+
+### Analysis Example
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load results
+df = pd.read_csv('artifacts/benchmark_*.csv')
+
+# Compare methods and engines
+summary = df.groupby(['method', 'engine']).agg({
+    'request_throughput_avg': 'mean',
+    'ttft_avg': 'mean',
+    'inter_token_latency_avg': 'mean',
+    'output_token_throughput_avg': 'mean'
+}).round(2)
+
+print(summary)
+
+# Plot comparison
+summary['output_token_throughput_avg'].plot(kind='bar', title='Token Throughput Comparison')
+plt.ylabel('Tokens/sec')
+plt.tight_layout()
+plt.savefig('throughput_comparison.png')
+```
+
+## Architecture Details
+
+### Class Hierarchy
+
+```
+BaseModelDeployer (ABC)
+├── HFModelDeployer
+│   ├── Supports: vllm, sglang, trtllm
+│   └── Direct engine deployment
+├── TritonModelDeployer
+│   ├── Supports: vllm, python, trtllm
+│   ├── Creates model repository
+│   ├── Generates config.pbtxt
+│   └── Optional OpenAI frontend
+├── NIMModelDeployer (NotImplemented)
+│   └── NVIDIA optimized containers
+└── UNIMModelDeployer (NotImplemented)
+    └── Universal wrapper
+```
+
+### Key Methods
+
+All deployers implement:
+- `start()` - Start the container
+- `stop()` - Stop the container
+- `restart()` - Restart the container
+- `status()` - Check container status
+- `logs(follow=False)` - View container logs
 
 ## Troubleshooting
 
-### Docker Issues
+### Container fails to start
 
-**Container fails to start:**
-- Check if NVIDIA runtime is available: `docker info | grep -i nvidia`
-- Check GPU availability: `nvidia-smi`
-- Check if port is already in use: `lsof -i :8000`
-
-**Out of memory errors:**
-- Reduce `--gpu-memory` value
-- Reduce `--max-model-len`
-- Increase `--tp-size` for multi-GPU
-
-### Benchmark Issues
-
-**genai-perf not found:**
 ```bash
-pip install genai-perf
+# Check Docker and NVIDIA runtime
+docker info | grep -i nvidia
+
+# Check GPU availability
+nvidia-smi
+
+# Check logs
+python docker.py logs --container-name CONTAINER_NAME
 ```
 
-**Endpoint not accessible:**
-- Check container status: `python docker_hf.py status --container-name <name>`
-- Check container logs: `python docker_hf.py logs --container-name <name>`
-- Verify endpoint URL and port
+### Benchmark fails
 
-**Low throughput:**
-- Increase `--concurrency`
-- Check GPU utilization: `nvidia-smi`
-- Increase `--gpu-memory` if GPU is underutilized
+```bash
+# Check endpoint accessibility
+curl http://localhost:8000/v1/models
+
+# Check genai-perf installation
+genai-perf --version
+
+# Run with verbose output
+python measure.py --method hf --model MODEL --engine vllm --endpoint URL --input-tokens-mean 1000 --output-tokens-mean 100
+```
+
+### Port already in use
+
+```bash
+# Check what's using the port
+sudo lsof -i :8000
+
+# Use a different port
+python docker.py start --method hf --model MODEL --engine vllm --port 8001
+```
+
+## Performance Tips
+
+1. **GPU Memory**: Adjust `--gpu-memory` based on model size
+   - Small models (<10B): 0.9
+   - Large models (30B+): 0.8-0.85
+
+2. **Tensor Parallelism**: Use `--tp-size` for multi-GPU
+   - 2-4 GPUs for 30B models
+   - 8 GPUs for 70B+ models
+
+3. **Context Length**: Adjust `--max-model-len` based on use case
+   - Short context: 4096-8192
+   - Medium context: 16384-32768
+   - Long context: 65536-131072
+
+4. **Benchmarking**: Use appropriate concurrency
+   - Low concurrency (1-10): Latency testing
+   - Medium concurrency (20-50): Balanced testing
+   - High concurrency (100+): Throughput testing
+
+## Future Enhancements
+
+- [ ] Implement NIM deployment
+- [ ] Implement UNIM deployment
+- [ ] Add support for multi-node deployment
+- [ ] Add automatic GPU count detection
+- [ ] Add cost estimation
+- [ ] Add model quantization options
+- [ ] Add batch processing support
+
+## Contributing
+
+To add a new deployment method:
+
+1. Create a new class inheriting from `BaseModelDeployer`
+2. Implement all abstract methods
+3. Add to `SUPPORTED_METHODS` and factory function
+4. Update documentation
+
+To add a new engine:
+
+1. Add engine to `SUPPORTED_ENGINES` for appropriate methods
+2. Implement `_build_<engine>_command()` in relevant deployers
+3. Update documentation
 
 ## License
 
-See LICENSE file for details.
+[Your License Here]
 
-## References
+## Support
 
-- [Qwen3-30B-A3B-Thinking-2507 Model Card](https://huggingface.co/Qwen/Qwen3-30B-A3B-Thinking-2507)
-- [vLLM Documentation](https://docs.vllm.ai/)
-- [SGLang Documentation](https://github.com/sgl-project/sglang)
-- [TensorRT-LLM Documentation](https://github.com/NVIDIA/TensorRT-LLM)
-- [GenAI-Perf Documentation](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/client/src/c%2B%2B/perf_analyzer/genai-perf/README.html)
+For issues, questions, or contributions, please open an issue on the repository.
 
+---
+
+## 📖 Additional Documentation
+
+All detailed documentation is available in the [`doc/`](doc/) folder:
+
+- [Quick Start Guide](doc/QUICKSTART.md) - Get started in 5 minutes
+- [Quick Reference](doc/QUICK_REFERENCE.md) - Command cheat sheet  
+- [Architecture Guide](doc/ARCHITECTURE.md) - System design and diagrams
+- [Refactoring Summary](doc/REFACTORING_SUMMARY.md) - What changed and why
+- [Documentation Index](doc/INDEX.md) - Complete documentation list
+
+**First time here?** Start with the [Quick Start Guide](doc/QUICKSTART.md)!

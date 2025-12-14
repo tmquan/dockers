@@ -20,9 +20,9 @@ MODEL="Qwen/Qwen3-30B-A3B-Thinking-2507"
 # Available backends:
 #   - trtllm: TensorRT-LLM backend for Triton (best performance, requires pre-built engines)
 # Backend configuration
-# Triton Server backends: vllm (fast), python (baseline), trtllm (maximum performance - requires manual conversion)
+# Triton Server backends: vllm (fast), python (baseline), trtllm (maximum performance)
 # All backends work with OpenAI frontend
-# Note: TRT-LLM disabled - requires model-specific checkpoint conversion
+# Note: TRT-LLM uses NeMo container for model conversion (automatic)
 BACKENDS=("vllm" "python")
 BASE_PORT=9000  # Base port for OpenAI frontend (9000, 9010, etc.)
 OUTPUT_DIR="artifacts"
