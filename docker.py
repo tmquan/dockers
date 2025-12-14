@@ -622,6 +622,7 @@ parameters: {{
 '''
         
         elif self.engine == "python":
+            # Python backend configuration for OpenAI frontend compatibility
             return f'''name: "{model_name}"
 backend: "python"
 max_batch_size: 32
@@ -633,8 +634,50 @@ input [
     dims: [ -1 ]
   }},
   {{
+    name: "stream"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
     name: "max_tokens"
     data_type: TYPE_INT32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "temperature"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "top_p"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "frequency_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "presence_penalty"
+    data_type: TYPE_FP32
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_input_tokens"
+    data_type: TYPE_BOOL
+    dims: [ -1 ]
+    optional: true
+  }},
+  {{
+    name: "return_num_output_tokens"
+    data_type: TYPE_BOOL
     dims: [ -1 ]
     optional: true
   }}
@@ -651,7 +694,7 @@ output [
 instance_group [
   {{
     count: 1
-    kind: KIND_GPU
+    kind: KIND_MODEL
   }}
 ]
 '''
@@ -724,52 +767,147 @@ parameters: {{
         print(f"   ✅ Created model.json")
     
     def _create_python_backend_files(self, model_dir):
-        """Create Python backend model.py (simple echo implementation)."""
+        """Create Python backend model.py (simple echo implementation for testing)."""
         print(f"   Creating Python backend files...")
         
         model_version_dir = model_dir / "1"
         model_py = model_version_dir / "model.py"
         
-        python_code = f'''import numpy as np
+        # Python backend implementation with full OpenAI parameter support
+        python_code = f'''import json
+import numpy as np
 import triton_python_backend_utils as pb_utils
 
+try:
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    import torch
+except ImportError:
+    pass
+
 class TritonPythonModel:
-    """Simple Python backend for baseline comparison."""
+    """Python backend for Triton with HuggingFace Transformers."""
     
     def initialize(self, args):
         """Initialize the model."""
+        self.model_config = json.loads(args['model_config'])
         self.model_name = "{self.model}"
-        print(f"Python backend initialized: {{self.model_name}}")
+        print(f"[Python Backend] Loading model: {{self.model_name}}")
+        
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                trust_remote_code=True
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                trust_remote_code=True
+            )
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(f"[Python Backend] Model loaded successfully on {{self.device}}")
+        except Exception as e:
+            print(f"[Python Backend] Error loading model: {{e}}")
+            # Fallback to echo mode for testing
+            self.model = None
+            self.tokenizer = None
     
     def execute(self, requests):
-        """Execute inference (echo mode for testing)."""
+        """Execute inference on batch of requests."""
         responses = []
         
         for request in requests:
             try:
+                # Get text input (required)
                 text_input = pb_utils.get_input_tensor_by_name(request, "text_input")
-                text_input_str = text_input.as_numpy()[0].decode('utf-8')
+                text_input_np = text_input.as_numpy()
                 
-                output_text = f"Echo: {{text_input_str[:100]}}..."
+                # Handle string decoding - flatten if needed and decode
+                text_input_bytes = text_input_np.flatten()[0]
+                if isinstance(text_input_bytes, bytes):
+                    text_input_str = text_input_bytes.decode('utf-8')
+                elif isinstance(text_input_bytes, np.ndarray):
+                    text_input_str = str(text_input_bytes.item())
+                else:
+                    text_input_str = str(text_input_bytes)
                 
+                # Get optional parameters
+                max_tokens = 100
+                temperature = 0.7
+                top_p = 1.0
+                
+                try:
+                    max_tokens_tensor = pb_utils.get_input_tensor_by_name(request, "max_tokens")
+                    if max_tokens_tensor is not None:
+                        max_tokens = int(max_tokens_tensor.as_numpy()[0])
+                except:
+                    pass
+                
+                try:
+                    temperature_tensor = pb_utils.get_input_tensor_by_name(request, "temperature")
+                    if temperature_tensor is not None:
+                        temperature = float(temperature_tensor.as_numpy()[0])
+                except:
+                    pass
+                
+                try:
+                    top_p_tensor = pb_utils.get_input_tensor_by_name(request, "top_p")
+                    if top_p_tensor is not None:
+                        top_p = float(top_p_tensor.as_numpy()[0])
+                except:
+                    pass
+                
+                # Generate response
+                if self.model is not None and self.tokenizer is not None:
+                    inputs = self.tokenizer(text_input_str, return_tensors="pt").to(self.device)
+                    
+                    with torch.no_grad():
+                        outputs = self.model.generate(
+                            **inputs,
+                            max_new_tokens=max_tokens,
+                            temperature=temperature,
+                            top_p=top_p,
+                            do_sample=True if temperature > 0 else False
+                        )
+                    
+                    output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                else:
+                    # Fallback echo mode
+                    output_text = f"Echo (Python backend): {{text_input_str[:100]}}"
+                
+                # Create output tensor
                 output_tensor = pb_utils.Tensor(
                     "text_output",
                     np.array([output_text.encode('utf-8')], dtype=object)
                 )
                 
-                responses.append(pb_utils.InferenceResponse(output_tensors=[output_tensor]))
+                inference_response = pb_utils.InferenceResponse(
+                    output_tensors=[output_tensor]
+                )
+                responses.append(inference_response)
+                
             except Exception as e:
+                error_message = f"Error in inference: {{str(e)}}"
+                print(f"[Python Backend] {{error_message}}")
+                
                 error_tensor = pb_utils.Tensor(
                     "text_output",
-                    np.array([f"Error: {{str(e)}}".encode('utf-8')], dtype=object)
+                    np.array([error_message.encode('utf-8')], dtype=object)
                 )
-                responses.append(pb_utils.InferenceResponse(output_tensors=[error_tensor]))
+                
+                responses.append(pb_utils.InferenceResponse(
+                    output_tensors=[error_tensor]
+                ))
         
         return responses
     
     def finalize(self):
         """Clean up resources."""
-        print("Python backend finalized")
+        print("[Python Backend] Cleaning up model resources")
+        if hasattr(self, 'model') and self.model is not None:
+            del self.model
+        if hasattr(self, 'tokenizer') and self.tokenizer is not None:
+            del self.tokenizer
 '''
         
         with open(model_py, 'w') as f:

@@ -22,7 +22,7 @@ OUTPUT_DIR="artifacts"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Benchmark parameters
-INPUT_SEQUENCE_LENGTH=32768   # 32k tokens context (max model length)
+INPUT_SEQUENCE_LENGTH=40000   # 40k tokens context (max model length)
 ACTUAL_INPUT_LEN=30000        # Actual input tokens (leave buffer for variation)
 OUTPUT_SEQUENCE_LENGTH=3000   # Fixed output
 CONCURRENCY=40                # Concurrent requests
