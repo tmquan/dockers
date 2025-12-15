@@ -290,9 +290,14 @@ class PerformanceMeasure:
         # Use the most recent directory
         artifacts_dir = sorted(artifact_dirs, key=lambda p: p.stat().st_mtime)[-1]
         
-        profile_files = list(artifacts_dir.glob("**/profile_export.json"))
+        # Try newer format first (profile_export_genai_perf.json)
+        profile_files = list(artifacts_dir.glob("**/profile_export_genai_perf.json"))
         if not profile_files:
-            print(f"   ⚠️  Warning: Could not find profile_export.json in {artifacts_dir}")
+            # Fall back to older format (profile_export.json)
+            profile_files = list(artifacts_dir.glob("**/profile_export.json"))
+        
+        if not profile_files:
+            print(f"   ⚠️  Warning: Could not find profile_export*.json in {artifacts_dir}")
             return None
         
         profile_file = profile_files[0]
@@ -319,12 +324,66 @@ class PerformanceMeasure:
             # Add environment information
             metrics.update(env_info)
             
-            # Extract performance metrics
-            if "experiments" in data and len(data["experiments"]) > 0:
+            # Handle newer format (profile_export_genai_perf.json) - metrics at top level
+            if "request_throughput" in data:
+                # New format: metrics are at top level
+                metrics.update({
+                    "request_throughput_avg": data.get("request_throughput", {}).get("avg", 0),
+                    "request_latency_avg": data.get("request_latency", {}).get("avg", 0),
+                    "request_latency_p50": data.get("request_latency", {}).get("p50", 0),
+                    "request_latency_p95": data.get("request_latency", {}).get("p95", 0),
+                    "request_latency_p99": data.get("request_latency", {}).get("p99", 0),
+                    "request_latency_min": data.get("request_latency", {}).get("min", 0),
+                    "request_latency_max": data.get("request_latency", {}).get("max", 0),
+                    "request_latency_std": data.get("request_latency", {}).get("std", 0),
+                })
+                
+                # TTFT metrics
+                if "time_to_first_token" in data:
+                    ttft = data.get("time_to_first_token", {})
+                    metrics.update({
+                        "ttft_avg": ttft.get("avg", 0),
+                        "ttft_p50": ttft.get("p50", 0),
+                        "ttft_p95": ttft.get("p95", 0),
+                        "ttft_p99": ttft.get("p99", 0),
+                    })
+                
+                # Inter-token latency metrics
+                if "inter_token_latency" in data:
+                    itl = data.get("inter_token_latency", {})
+                    metrics.update({
+                        "inter_token_latency_avg": itl.get("avg", 0),
+                        "inter_token_latency_p50": itl.get("p50", 0),
+                        "inter_token_latency_p95": itl.get("p95", 0),
+                        "inter_token_latency_p99": itl.get("p99", 0),
+                    })
+                
+                # Token metrics
+                if "output_token_throughput" in data:
+                    metrics["output_token_throughput_avg"] = data.get("output_token_throughput", {}).get("avg", 0)
+                
+                if "output_sequence_length" in data:
+                    out_seq = data.get("output_sequence_length", {})
+                    metrics.update({
+                        "output_seq_len_avg": out_seq.get("avg", 0),
+                        "output_seq_len_p50": out_seq.get("p50", 0),
+                        "output_seq_len_p95": out_seq.get("p95", 0),
+                    })
+                
+                if "input_sequence_length" in data:
+                    in_seq = data.get("input_sequence_length", {})
+                    metrics.update({
+                        "input_seq_len_avg": in_seq.get("avg", 0),
+                        "input_seq_len_p50": in_seq.get("p50", 0),
+                        "input_seq_len_p95": in_seq.get("p95", 0),
+                    })
+            
+            # Handle older format (profile_export.json) - experiments structure
+            elif "experiments" in data and len(data["experiments"]) > 0:
                 exp = data["experiments"][0]
                 
                 # Request metrics
-                if "requests" in exp:
+                if "requests" in exp and isinstance(exp["requests"], dict):
                     req = exp["requests"]
                     metrics.update({
                         "request_throughput_avg": req.get("throughput", {}).get("mean", 0),
@@ -381,6 +440,8 @@ class PerformanceMeasure:
         
         except Exception as e:
             print(f"   ❌ Error parsing profile: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def _export_to_csv(self, metrics):
