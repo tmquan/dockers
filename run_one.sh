@@ -28,7 +28,8 @@ OUTPUT_SEQUENCE_LENGTH=3000   # Fixed output
 CONCURRENCY=40                # Concurrent requests
 REQUEST_COUNT=1000            # Total requests
 WARMUP_REQUEST_COUNT=100      # Warmup requests
-DEFAULT_GPU_MEMORY=0.9
+DEFAULT_GPU_MEMORY=0.95
+DEFAULT_TP_SIZE=4             # Default tensor parallel size for large models
 
 # Port configuration
 if [ "${METHOD}" = "triton" ]; then
@@ -135,6 +136,16 @@ echo ""
 # ============================================================================
 echo "🚀 Starting ${METHOD} container with ${ENGINE} engine..."
 
+# Determine tensor parallel size based on model
+TP_SIZE=1
+if [[ "${MODEL}" == *"30B"* ]] || [[ "${MODEL}" == *"34B"* ]]; then
+    TP_SIZE=${DEFAULT_TP_SIZE}
+    echo "   Using tensor parallelism: ${TP_SIZE} GPUs (30B model)"
+elif [[ "${MODEL}" == *"70B"* ]] || [[ "${MODEL}" == *"72B"* ]]; then
+    TP_SIZE=8
+    echo "   Using tensor parallelism: ${TP_SIZE} GPUs (70B model)"
+fi
+
 START_ARGS=(
     "--method" "${METHOD}"
     "--model" "${MODEL}"
@@ -143,6 +154,7 @@ START_ARGS=(
     "--max-model-len" "${INPUT_SEQUENCE_LENGTH}"
     "--gpu-memory" "${DEFAULT_GPU_MEMORY}"
     "--container-name" "${CONTAINER_NAME}"
+    "--tp-size" "${TP_SIZE}"
 )
 
 # Add method-specific arguments
