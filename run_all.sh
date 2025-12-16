@@ -32,23 +32,29 @@ DEFAULT_TP_SIZE=1             # Default tensor parallel size for large models
 
 # ============================================================================
 # Deployment Configuration
-# Methods: hf (HuggingFace), triton (Triton Server)
+# Methods: hf (HuggingFace), triton (Triton Server), unim (Universal NIM)
 # Engines per method:
 #   - hf: vllm, sglang, trtllm
 #   - triton: vllm, python, trtllm
+#   - unim: python (safetensors), vllm, trtllm
+#   - nim: vllm (to be implemented)
 # ============================================================================
 
 # Select deployment methods to test
-METHODS=("hf" "triton")
+METHODS=("hf" "triton" "unim")
 
 # Define engines for each method
 declare -A METHOD_ENGINES
 METHOD_ENGINES["hf"]="vllm sglang trtllm"
+METHOD_ENGINES["nim"]="vllm"  # To be implemented
+METHOD_ENGINES["unim"]="python vllm trtllm"
 METHOD_ENGINES["triton"]="vllm python"  # trtllm requires pre-built engines
 
 # Port configuration
 declare -A METHOD_BASE_PORT
 METHOD_BASE_PORT["hf"]=8000
+METHOD_BASE_PORT["nim"]=8000
+METHOD_BASE_PORT["unim"]=8000
 METHOD_BASE_PORT["triton"]=9000  # OpenAI frontend port
 
 echo "=============================================================================="
@@ -225,6 +231,10 @@ for method in "${METHODS[@]}"; do
         # Add method-specific arguments
         if [ "${method}" = "triton" ]; then
             START_ARGS+=("--openai-frontend" "--openai-port" "${PORT}")
+        elif [ "${method}" = "unim" ]; then
+            # UNIM supports max-input-length and max-output-length
+            # Using max-model-len for compatibility, but could add separate params
+            START_ARGS+=("--max-model-len" "${INPUT_SEQUENCE_LENGTH}")
         fi
         
         if ! python3 docker.py start "${START_ARGS[@]}"; then
@@ -240,21 +250,45 @@ for method in "${METHODS[@]}"; do
         MAX_WAIT=600  # 10 minutes
         WAIT_TIME=0
         
-        # Determine health endpoint
-        if [ "${method}" = "triton" ]; then
-            HEALTH_ENDPOINT="/health/ready"
-        else
-            HEALTH_ENDPOINT="/v1/models"
-        fi
+        # Determine health endpoint based on method
+        # For Triton with OpenAI frontend, use /v1/models (per Triton CLI docs)
+        # For Triton without OpenAI frontend, use /v2/health/ready
+        # For UNIM/NIM, use /v1/health/ready
+        # For HF, use /v1/models
+        case "${method}" in
+            "triton")
+                # Check if OpenAI frontend is being used (port 9000+ indicates OpenAI frontend)
+                if [ "${PORT}" -ge 9000 ]; then
+                    HEALTH_ENDPOINT="/v1/models"
+                else
+                    HEALTH_ENDPOINT="/v2/health/ready"
+                fi
+                ;;
+            "unim"|"nim")
+                HEALTH_ENDPOINT="/v1/health/ready"
+                ;;
+            *)
+                HEALTH_ENDPOINT="/v1/models"
+                ;;
+        esac
         
         echo "   Checking: ${ENDPOINT}${HEALTH_ENDPOINT}"
         
         while [ ${WAIT_TIME} -lt ${MAX_WAIT} ]; do
-            if curl -s -o /dev/null -w "%{http_code}" "${ENDPOINT}${HEALTH_ENDPOINT}" --max-time 2 | grep -q "200"; then
+            # Capture HTTP code, handling connection errors gracefully
+            # Use a temporary variable to avoid issues with newlines
+            RAW_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${ENDPOINT}${HEALTH_ENDPOINT}" --max-time 2 2>/dev/null || echo "000")
+            # Clean HTTP code: remove all whitespace/newlines and extract only 3-digit code
+            HTTP_CODE=$(echo -n "${RAW_CODE}" | tr -d '[:space:]' | grep -oE '^[0-9]{3}$' || echo "000")
+            
+            if [ "${HTTP_CODE}" = "200" ]; then
                 echo "✅ Service is ready!"
                 break
+            elif [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" != "404" ]; then
+                # Non-404/000 errors might indicate service is starting but not ready yet
+                echo "   Service responding (HTTP ${HTTP_CODE}) but may not be ready yet..."
             fi
-            echo "   Still starting... (${WAIT_TIME}s elapsed)"
+            echo "   Still starting... (${WAIT_TIME}s elapsed, HTTP ${HTTP_CODE})"
             sleep 10
             WAIT_TIME=$((WAIT_TIME + 10))
         done
