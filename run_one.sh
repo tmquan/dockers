@@ -6,6 +6,17 @@
 
 set -e
 
+# ============================================================================
+# Setup Logging
+# ============================================================================
+LOG_FILE="run_one.log"
+# Redirect all output to both terminal and log file
+exec > >(tee -a "${LOG_FILE}") 2>&1
+echo "=============================================================================="
+echo "Logging to: ${LOG_FILE}"
+echo "=============================================================================="
+echo ""
+
 # Load environment variables from .env file if it exists
 if [ -f .env ]; then
     echo "Loading environment variables from .env file..."

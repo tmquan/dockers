@@ -2,7 +2,7 @@
 
 """
 Universal NIM Deployment - Universal NIM deployment for HuggingFace Safetensors models.
-Supports Python (safetensors), vLLM, and TensorRT-LLM backends.
+Supports Python (safetensors), vLLM, SGLang, and TensorRT-LLM backends.
 """
 
 import os
@@ -49,7 +49,7 @@ class UNIMModelDeployer(BaseModelDeployer):
         Args:
             model: HuggingFace model path (e.g., "mistralai/Codestral-22B-v0.1") 
                    or local path. For HuggingFace, use "hf://" prefix or just the path.
-            engine: Backend engine - "python" (safetensors), "vllm", or "trtllm"
+            engine: Backend engine - "vllm", "trtllm", "sglang", or "python" (safetensors)
             cache_dir: Local cache directory for NIM cache
             port: Port to expose the service (default: 8000)
             gpu_memory: GPU memory utilization (not directly used by NIM, kept for compatibility)
@@ -128,6 +128,7 @@ class UNIMModelDeployer(BaseModelDeployer):
         engine_map = {
             "python": None,  # Default (safetensors)
             "vllm": "vllm",
+            "sglang": "sglang",
             "trtllm": "tensorrt_llm",
         }
         return engine_map.get(self.engine)

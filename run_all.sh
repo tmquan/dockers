@@ -6,6 +6,17 @@
 
 set -e
 
+# ============================================================================
+# Setup Logging
+# ============================================================================
+LOG_FILE="run_all.log"
+# Redirect all output to both terminal and log file
+exec > >(tee -a "${LOG_FILE}") 2>&1
+echo "=============================================================================="
+echo "Logging to: ${LOG_FILE}"
+echo "=============================================================================="
+echo ""
+
 # Load environment variables from .env file if it exists
 if [ -f .env ]; then
     echo "Loading environment variables from .env file..."
@@ -32,23 +43,23 @@ DEFAULT_TP_SIZE=1             # Default tensor parallel size for large models
 
 # ============================================================================
 # Deployment Configuration
-# Methods: hf (HuggingFace), triton (Triton Server), unim (Universal NIM)
+# Methods: hf (HuggingFace), nim (NVIDIA NIM), unim (Universal NIM), triton (Triton Server)
 # Engines per method:
-#   - hf: vllm, sglang, trtllm
-#   - triton: vllm, python, trtllm
-#   - unim: python (safetensors), vllm, trtllm
+#   - hf: vllm, trtllm, sglang
 #   - nim: vllm (to be implemented)
+#   - unim: vllm, trtllm, sglang, python (safetensors)
+#   - triton: vllm, trtllm
 # ============================================================================
 
 # Select deployment methods to test
-METHODS=("hf" "triton" "unim")
+METHODS=("hf" "nim" "unim" "triton")
 
 # Define engines for each method
 declare -A METHOD_ENGINES
-METHOD_ENGINES["hf"]="vllm sglang trtllm"
+METHOD_ENGINES["hf"]="vllm trtllm sglang"
 METHOD_ENGINES["nim"]="vllm"  # To be implemented
-METHOD_ENGINES["unim"]="python vllm trtllm"
-METHOD_ENGINES["triton"]="vllm"  # trtllm requires pre-built engines
+METHOD_ENGINES["unim"]="vllm trtllm sglang python"
+METHOD_ENGINES["triton"]="vllm trtllm"  # trtllm requires pre-built engines
 
 # Port configuration
 declare -A METHOD_BASE_PORT
@@ -245,57 +256,125 @@ for method in "${METHODS[@]}"; do
         fi
         
         # Wait for container to be ready
+        echo ""
         echo "⏳ Waiting for service to be ready..."
         ENDPOINT="http://localhost:${PORT}"
         MAX_WAIT=600  # 10 minutes
         WAIT_TIME=0
         
-        # Determine health endpoint based on method
-        # For Triton with OpenAI frontend, use /v1/models (per Triton CLI docs)
-        # For Triton without OpenAI frontend, use /v2/health/ready
-        # For UNIM/NIM, use /v1/health/ready
-        # For HF, use /v1/models
+        # Determine endpoints based on method
+        # We need to check both health AND that the model is actually loaded
+        MODEL_SANITIZED_ENDPOINT=$(echo "${MODEL}" | sed 's/\//_/g')
         case "${method}" in
             "triton")
                 # Check if OpenAI frontend is being used (port 9000+ indicates OpenAI frontend)
                 if [ "${PORT}" -ge 9000 ]; then
+                    # OpenAI frontend: check /v1/models to see if model is listed
                     HEALTH_ENDPOINT="/v1/models"
+                    MODEL_CHECK_ENDPOINT="/v1/models"
+                    MODEL_CHECK_TYPE="openai_list"
                 else
+                    # Standard Triton: check health, then verify model is loaded
                     HEALTH_ENDPOINT="/v2/health/ready"
+                    MODEL_CHECK_ENDPOINT="/v2/models/${MODEL_SANITIZED_ENDPOINT}/ready"
+                    MODEL_CHECK_TYPE="triton_ready"
                 fi
                 ;;
             "unim"|"nim")
                 HEALTH_ENDPOINT="/v1/health/ready"
+                MODEL_CHECK_ENDPOINT="/v1/models"
+                MODEL_CHECK_TYPE="model_list"
                 ;;
             *)
+                # HF and others: check /v1/models and verify model is listed
                 HEALTH_ENDPOINT="/v1/models"
+                MODEL_CHECK_ENDPOINT="/v1/models"
+                MODEL_CHECK_TYPE="model_list"
                 ;;
         esac
         
-        echo "   Checking: ${ENDPOINT}${HEALTH_ENDPOINT}"
+        echo "   Step 1: Checking health endpoint: ${ENDPOINT}${HEALTH_ENDPOINT}"
+        echo "   Step 2: Verifying model is loaded: ${MODEL}"
+        
+        HEALTH_READY=false
+        MODEL_READY=false
         
         while [ ${WAIT_TIME} -lt ${MAX_WAIT} ]; do
-            # Capture HTTP code, handling connection errors gracefully
-            # Use a temporary variable to avoid issues with newlines
-            RAW_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${ENDPOINT}${HEALTH_ENDPOINT}" --max-time 2 2>/dev/null || echo "000")
-            # Clean HTTP code: remove all whitespace/newlines and extract only 3-digit code
-            HTTP_CODE=$(echo -n "${RAW_CODE}" | tr -d '[:space:]' | grep -oE '^[0-9]{3}$' || echo "000")
-            
-            if [ "${HTTP_CODE}" = "200" ]; then
-                echo "✅ Service is ready!"
-                break
-            elif [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" != "404" ]; then
-                # Non-404/000 errors might indicate service is starting but not ready yet
-                echo "   Service responding (HTTP ${HTTP_CODE}) but may not be ready yet..."
+            # Step 1: Check health endpoint
+            if [ "${HEALTH_READY}" = false ]; then
+                RAW_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${ENDPOINT}${HEALTH_ENDPOINT}" --max-time 2 2>/dev/null || echo "000")
+                HTTP_CODE=$(echo -n "${RAW_CODE}" | tr -d '[:space:]' | grep -oE '^[0-9]{3}$' || echo "000")
+                
+                if [ "${HTTP_CODE}" = "200" ]; then
+                    HEALTH_READY=true
+                    echo "   ✅ Health check passed (HTTP ${HTTP_CODE})"
+                else
+                    echo "   ⏳ Health check... (HTTP ${HTTP_CODE})"
+                fi
             fi
-            echo "   Still starting... (${WAIT_TIME}s elapsed, HTTP ${HTTP_CODE})"
+            
+            # Step 2: Check if model is actually loaded (only after health is ready)
+            if [ "${HEALTH_READY}" = true ] && [ "${MODEL_READY}" = false ]; then
+                MODEL_FOUND=false
+                case "${MODEL_CHECK_TYPE}" in
+                    "openai_list")
+                        # Check if model appears in /v1/models list
+                        if curl -s "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" 2>/dev/null | grep -q "\"${MODEL_SANITIZED_ENDPOINT}\"" || \
+                           curl -s "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" 2>/dev/null | grep -q "\"${MODEL}\""; then
+                            MODEL_FOUND=true
+                        fi
+                        ;;
+                    "triton_ready")
+                        # Check Triton model ready endpoint
+                        if curl -s -o /dev/null -w '%{http_code}' "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" --max-time 2 2>/dev/null | grep -q '200'; then
+                            MODEL_FOUND=true
+                        fi
+                        ;;
+                    "model_list")
+                        # Check if model appears in models list
+                        if curl -s "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" 2>/dev/null | grep -q "\"${MODEL}\"" || \
+                           curl -s "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" 2>/dev/null | grep -q "\"${MODEL_SANITIZED_ENDPOINT}\""; then
+                            MODEL_FOUND=true
+                        fi
+                        ;;
+                esac
+                
+                if [ "${MODEL_FOUND}" = true ]; then
+                    MODEL_READY=true
+                    echo "   ✅ Model is loaded and ready!"
+                    break
+                else
+                    echo "   ⏳ Waiting for model to load... (${WAIT_TIME}s elapsed)"
+                fi
+            fi
+            
+            if [ "${HEALTH_READY}" = false ]; then
+                echo "   Still starting... (${WAIT_TIME}s elapsed, HTTP ${HTTP_CODE})"
+            fi
+            
             sleep 10
             WAIT_TIME=$((WAIT_TIME + 10))
         done
         
         if [ ${WAIT_TIME} -ge ${MAX_WAIT} ]; then
             echo "❌ Timeout waiting for service"
+            if [ "${HEALTH_READY}" = false ]; then
+                echo "   Health endpoint not ready"
+            fi
+            if [ "${MODEL_READY}" = false ]; then
+                echo "   Model not loaded"
+            fi
+            echo ""
+            echo "📋 Container logs (last 50 lines):"
             python3 docker.py logs --container-name "${CONTAINER_NAME}" | tail -50
+            echo ""
+            echo "🔍 Debug: Checking endpoints manually:"
+            echo "   Health: curl -s ${ENDPOINT}${HEALTH_ENDPOINT}"
+            curl -s "${ENDPOINT}${HEALTH_ENDPOINT}" | head -20
+            echo ""
+            echo "   Model check: ${ENDPOINT}${MODEL_CHECK_ENDPOINT}"
+            curl -s "${ENDPOINT}${MODEL_CHECK_ENDPOINT}" | head -20
+            echo ""
             python3 docker.py stop --container-name "${CONTAINER_NAME}"
             FAILED_TESTS+=("${method}/${ENGINE}: Service timeout")
             FAILED_TESTS_COUNT=$((FAILED_TESTS_COUNT + 1))
@@ -305,6 +384,8 @@ for method in "${METHODS[@]}"; do
         # Run benchmark
         echo ""
         echo "📊 Running benchmark..."
+        echo "   This will take several minutes..."
+        echo ""
         
         OUTPUT_FILE="${OUTPUT_DIR}/benchmark_${MODEL_SANITIZED}_${method}_${ENGINE}_${TIMESTAMP}.csv"
         
@@ -322,12 +403,20 @@ for method in "${METHODS[@]}"; do
             "--streaming"
         )
         
+        BENCHMARK_SUCCESS=false
+        
         if python3 measure.py "${MEASURE_ARGS[@]}"; then
-            echo "✅ Benchmark completed"
+            echo ""
+            echo "✅ Benchmark completed successfully!"
+            BENCHMARK_SUCCESS=true
             RESULT_PROFILES+=("${method}/${ENGINE}")
             SUCCESSFUL_TESTS=$((SUCCESSFUL_TESTS + 1))
         else
-            echo "❌ Benchmark failed"
+            echo ""
+            echo "❌ Benchmark failed!"
+            echo ""
+            echo "📋 Container logs (last 50 lines):"
+            python3 docker.py logs --container-name "${CONTAINER_NAME}" | tail -50
             FAILED_TESTS+=("${method}/${ENGINE}: Benchmark execution failed")
             FAILED_TESTS_COUNT=$((FAILED_TESTS_COUNT + 1))
         fi

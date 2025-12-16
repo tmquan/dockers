@@ -27,12 +27,12 @@ CONTAINER_CACHE_PATH = "/root/.cache/huggingface"
 # ============================================================================
 # Supported Methods and Engines
 # ============================================================================
-SUPPORTED_METHODS = ["hf", "triton", "nim", "unim"]
+SUPPORTED_METHODS = ["hf", "nim", "unim", "triton"]
 SUPPORTED_ENGINES = {
-    "hf": ["vllm", "sglang", "trtllm"],
-    "triton": ["vllm", "trtllm"], 
+    "hf": ["vllm", "trtllm", "sglang"],
     "nim": ["vllm"],  # To be implemented
-    "unim": ["python", "vllm", "trtllm"],  # Python (safetensors), vLLM, TensorRT-LLM
+    "unim": ["vllm", "trtllm", "sglang", "python"],  # vLLM, TensorRT-LLM, SGLang, Python (safetensors)
+    "triton": ["vllm", "trtllm"],
 }
 
 

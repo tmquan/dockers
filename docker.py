@@ -43,12 +43,12 @@ def create_deployer(method, model, engine, **kwargs):
     
     if method == "hf":
         return HFModelDeployer(model, engine, **kwargs)
-    elif method == "triton":
-        return TritonModelDeployer(model, engine, **kwargs)
     elif method == "nim":
         return NIMModelDeployer(model, engine, **kwargs)
     elif method == "unim":
         return UNIMModelDeployer(model, engine, **kwargs)
+    elif method == "triton":
+        return TritonModelDeployer(model, engine, **kwargs)
     else:
         print(f"\n❌ Error: Unknown method '{method}'")
         print(f"   Supported methods: {', '.join(SUPPORTED_METHODS)}\n")
@@ -81,10 +81,10 @@ Examples:
   python docker.py logs --container-name hf-qwen3-30b-vllm -f
 
 Supported methods:
-  - hf: Direct HuggingFace deployment (engines: vllm, sglang, trtllm)
+  - hf: Direct HuggingFace deployment (engines: vllm, trtllm, sglang)
+  - nim: NVIDIA NIM (to be implemented) (engines: vllm)
+  - unim: Universal NIM deployment (engines: vllm, trtllm, sglang, python/safetensors)
   - triton: Triton Inference Server (engines: vllm, trtllm)
-  - nim: NVIDIA NIM (to be implemented)
-  - unim: Universal NIM deployment (engines: python/safetensors, vllm, trtllm)
         """
     )
     
