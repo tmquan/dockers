@@ -48,7 +48,7 @@ declare -A METHOD_ENGINES
 METHOD_ENGINES["hf"]="vllm sglang trtllm"
 METHOD_ENGINES["nim"]="vllm"  # To be implemented
 METHOD_ENGINES["unim"]="python vllm trtllm"
-METHOD_ENGINES["triton"]="vllm python"  # trtllm requires pre-built engines
+METHOD_ENGINES["triton"]="vllm"  # trtllm requires pre-built engines
 
 # Port configuration
 declare -A METHOD_BASE_PORT

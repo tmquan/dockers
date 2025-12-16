@@ -82,7 +82,7 @@ Examples:
 
 Supported methods:
   - hf: Direct HuggingFace deployment (engines: vllm, sglang, trtllm)
-  - triton: Triton Inference Server (engines: vllm, python, trtllm)
+  - triton: Triton Inference Server (engines: vllm, trtllm)
   - nim: NVIDIA NIM (to be implemented)
   - unim: Universal NIM deployment (engines: python/safetensors, vllm, trtllm)
         """

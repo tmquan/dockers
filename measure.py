@@ -248,11 +248,8 @@ class PerformanceMeasure:
             cmd_parts.append(f"--extra-inputs ignore_eos:true")
         
         # Add streaming flag
-        # Note: Triton Python backend doesn't support streaming, so disable it
-        if self.streaming and not (self.method == "triton" and self.engine == "python"):
+        if self.streaming:
             cmd_parts.append("--streaming")
-        elif self.method == "triton" and self.engine == "python" and self.streaming:
-            print(f"   ⚠️  Note: Triton Python backend doesn't support streaming, disabling streaming mode")
         
         # Add extra arguments
         cmd_parts.extend(self.extra_args)
@@ -588,7 +585,7 @@ Examples:
     parser.add_argument('--method', default=DEFAULT_METHOD,
                        help=f'Deployment method (default: {DEFAULT_METHOD})')
     parser.add_argument('--model', required=True, help='Model name')
-    parser.add_argument('--engine', required=True, help='Engine name (vllm, sglang, trtllm, python)')
+    parser.add_argument('--engine', required=True, help='Engine name (vllm, sglang, trtllm)')
     parser.add_argument('--endpoint', required=True, help='API endpoint URL (e.g., http://localhost:8000)')
     
     # Input/output
