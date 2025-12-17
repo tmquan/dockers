@@ -10,7 +10,7 @@ This suite provides a unified framework for deploying and benchmarking Large Lan
    - `HFModelDeployer` - Direct HuggingFace model deployment
    - `TritonModelDeployer` - NVIDIA Triton Inference Server deployment
    - `NIMModelDeployer` - NVIDIA NIM deployment (to be implemented)
-   - `UNIMModelDeployer` - NVIDIA MultiLLM NIM deployment (to be implemented)
+   - `UNIMModelDeployer` - Universal NIM deployment (✅ Implemented)
 
 2. **`measure.py`** - Performance measurement using GenAI-Perf
    - Supports synthetic input generation (for long contexts)
@@ -24,21 +24,25 @@ This suite provides a unified framework for deploying and benchmarking Large Lan
 
 ### Deployment Methods
 
-| Method   | Status       | Description                                    | Engines Supported         |
-|----------|--------------|------------------------------------------------|---------------------------|
-| `hf`     | ✅ Ready     | Direct HuggingFace model deployment            | vllm, sglang, trtllm     |
-| `triton` | ✅ Ready     | NVIDIA Triton Inference Server                 | vllm, python, trtllm     |
-| `nim`    | 🚧 Planned   | NVIDIA NIM (optimized containers)              | vllm                     |
-| `unim`   | 🚧 Planned   | Universal NIM (generic wrapper)                | vllm                     |
+| Method   | Status       | Description                                    | Engines Supported                    |
+|----------|--------------|------------------------------------------------|--------------------------------------|
+| `hf`     | ✅ Ready     | Direct HuggingFace model deployment            | vllm, trtllm, sglang                |
+| `nim`    | 🚧 Planned   | NVIDIA NIM (optimized containers)              | vllm (planned)                      |
+| `unim`   | ✅ Ready     | Universal NIM (HuggingFace Safetensors)        | vllm, trtllm, sglang, python        |
+| `triton` | ✅ Ready     | NVIDIA Triton Inference Server                 | vllm, trtllm*                       |
+
+*Note: `triton/trtllm` requires pre-built TensorRT-LLM engines*
 
 ### Inference Engines
 
-| Engine   | Methods      | Description                                    | Status                    |
-|----------|--------------|------------------------------------------------|---------------------------|
-| `vllm`   | hf, triton   | Fast and flexible with PagedAttention          | ✅ Production Ready       |
-| `sglang` | hf           | Optimized for structured generation            | ✅ Production Ready       |
-| `trtllm` | hf, triton   | NVIDIA TensorRT-LLM (maximum performance)      | ✅ Ready (auto-converts)  |
-| `python` | triton       | Python backend (baseline for comparison)       | ✅ Baseline               |
+| Engine   | Methods                    | Description                                    | Status                    |
+|----------|----------------------------|------------------------------------------------|---------------------------|
+| `vllm`   | hf, nim, unim, triton      | Fast and flexible with PagedAttention          | ✅ Production Ready       |
+| `trtllm` | hf, unim, triton*          | NVIDIA TensorRT-LLM (maximum performance)      | ✅ Ready (auto-converts)  |
+| `sglang` | hf, unim                   | Optimized for structured generation            | ✅ Production Ready       |
+| `python` | unim                       | Python backend (safetensors, baseline)         | ✅ Baseline               |
+
+*Note: `triton/trtllm` requires pre-built engines*
 
 ## Quick Start
 
@@ -64,6 +68,15 @@ pip install genai-perf
 # Test HuggingFace + vLLM (fastest)
 ./run_one.sh hf vllm
 
+# Test NIM (planned)
+# ./run_one.sh nim vllm
+
+# Test UNIM with different engines
+./run_one.sh unim vllm
+./run_one.sh unim trtllm
+./run_one.sh unim sglang
+./run_one.sh unim python
+
 # Test Triton + vLLM with OpenAI frontend
 ./run_one.sh triton vllm
 
@@ -81,7 +94,44 @@ pip install genai-perf
 ./run_all.sh
 
 # Results will be saved in artifacts/ directory
+# Logs are saved to run_all.log
 ```
+
+## Performance Benchmarks
+
+### Benchmark Results Summary
+
+*Test Configuration: Qwen/Qwen3-30B-A3B-Thinking-2507, 30k input tokens, 3k output tokens, 40 concurrency, 1000 requests*
+
+| Method/Engine | TTFT (ms) | ITL (ms) | Throughput (tokens/s) | Request Latency (ms) | Status |
+|---------------|-----------|---------|------------------------|----------------------|--------|
+| **hf/vllm**   | 61,955    | 43.78   | 556.01                 | 193,240              | ✅     |
+| **hf/trtllm** | 72,550    | 38.15   | 568.41                 | 183,762              | ✅     |
+| **hf/sglang** | 70,545    | 50.56   | 500.59                 | 222,167              | ✅     |
+| **nim/vllm**  | -         | -       | -                      | -                    | 🚧     |
+| **unim/vllm** | 74,294    | 44.79   | 515.28                 | 208,507              | ✅     |
+| **unim/trtllm** | 84,630  | 39.23   | 526.30                 | 199,040              | ✅     |
+| **unim/sglang** | 86,091   | 49.08   | 459.74                 | 233,223              | ✅     |
+| **unim/python** | 84,988   | 39.54   | 523.30                 | 200,046              | ✅     |
+| **triton/vllm** | 60,661   | 50.67   | 491.40                 | 212,577              | ✅     |
+| **triton/trtllm** | -      | -       | -                      | -                    | ⚠️*    |
+
+*Requires pre-built TensorRT-LLM engines*
+
+**Key Observations:**
+- **Best TTFT**: `triton/vllm` (60.7s) - Fastest time to first token
+- **Best Throughput**: `hf/trtllm` (568 tokens/s) - Highest token generation rate
+- **Best ITL**: `hf/trtllm` (38.15ms) - Lowest inter-token latency
+- **Best Request Latency**: `unim/trtllm` (199s) - Fastest end-to-end request completion
+
+**Performance Notes:**
+- TensorRT-LLM (`trtllm`) generally provides the best throughput and lowest ITL
+- vLLM provides good balance across all metrics
+- SGLang shows higher ITL but good for structured generation use cases
+- UNIM Python backend performs surprisingly well, comparable to optimized engines
+- Triton adds slight overhead but provides enterprise features (model management, batching, etc.)
+
+*Full benchmark results available in `run_all.log` and `artifacts/` directory*
 
 ## Usage Examples
 
@@ -259,18 +309,20 @@ plt.savefig('throughput_comparison.png')
 
 ```
 BaseModelDeployer (ABC)
-├── HFModelDeployer
-│   ├── Supports: vllm, sglang, trtllm
+├── HFModelDeployer ✅
+│   ├── Supports: vllm, trtllm, sglang
 │   └── Direct engine deployment
-├── TritonModelDeployer
-│   ├── Supports: vllm, python, trtllm
-│   ├── Creates model repository
-│   ├── Generates config.pbtxt
-│   └── Optional OpenAI frontend
-├── NIMModelDeployer (NotImplemented)
-│   └── NVIDIA optimized containers
-└── UNIMModelDeployer (NotImplemented)
-    └── Universal wrapper
+├── NIMModelDeployer 🚧
+│   └── NVIDIA optimized containers (planned)
+├── UNIMModelDeployer ✅
+│   ├── Supports: vllm, trtllm, sglang, python
+│   ├── HuggingFace Safetensors models
+│   └── Universal NIM wrapper
+└── TritonModelDeployer ✅
+    ├── Supports: vllm, trtllm*
+    ├── Creates model repository
+    ├── Generates config.pbtxt
+    └── Optional OpenAI frontend
 ```
 
 ### Key Methods
@@ -342,13 +394,22 @@ python docker.py start --method hf --model MODEL --engine vllm --port 8001
 
 ## Future Enhancements
 
-- [ ] Implement NIM deployment
-- [ ] Implement UNIM deployment
+### High Priority
+- [ ] Implement NIM deployment (`nim/vllm`)
+- [ ] Fix Triton TensorRT-LLM backend (requires pre-built engine support)
+- [ ] Add automatic GPU count detection and TP size recommendations
+
+### Medium Priority
 - [ ] Add support for multi-node deployment
-- [ ] Add automatic GPU count detection
-- [ ] Add cost estimation
-- [ ] Add model quantization options
+- [ ] Add model quantization options (INT4, INT8, FP8)
 - [ ] Add batch processing support
+- [ ] Add dynamic batching configuration
+
+### Low Priority
+- [ ] Add cost estimation (per-token pricing)
+- [ ] Add performance regression testing
+- [ ] Add support for additional engines (TensorRT-LLM native, etc.)
+- [ ] Add Kubernetes deployment support
 
 ## Contributing
 
