@@ -1,0 +1,1380 @@
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+Loading environment variables from .env file...
+==============================================================================
+Unified Benchmark Suite
+==============================================================================
+
+Configuration:
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Methods: hf nim unim triton
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+  Output Directory: artifacts/
+
+📋 Checking prerequisites...
+✅ genai-perf found locally
+✅ Prerequisites check passed
+
+🧹 Cleaning up existing containers...
+   Found containers with pattern '-hf-':
+   - qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+   Stopping and removing...
+qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+   ✅ Cleanup complete
+
+📊 Running 10 benchmark tests...
+
+
+==============================================================================
+Test 1/10: hf/vllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-hf-vllm' is not running
+
+🚀 Starting hf container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/hf
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: 0b6d875c49d10371fa3277540aa1b8df80bd27740b06aaaef85456d29bba1864
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8000
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-vllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-vllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8000/v1/models
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+   Still starting... (130s elapsed, HTTP 000)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-16 15:02:49] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-16 15:02:49] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-16 15:02:49] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-16 15:02:49] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-16 15:02:53] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8000 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                              
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                             
+[2025-12-16 16:42:29] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                        profile_data_parser.py:66
+[2025-12-16 16:42:41] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:02<03:20,  4.95requests/s]Progress:   2%|▏         | 20/1000 [00:04<03:35,  4.55requests/s]Progress:   3%|▎         | 30/1000 [00:05<03:04,  5.25requests/s]Progress:   4%|▍         | 40/1000 [00:07<02:39,  6.01requests/s]Progress:   5%|▌         | 50/1000 [00:08<02:18,  6.87requests/s]Progress:   6%|▌         | 60/1000 [00:09<02:14,  6.98requests/s]Progress:   7%|▋         | 70/1000 [00:11<02:32,  6.10requests/s]Progress:   8%|▊         | 80/1000 [00:13<02:46,  5.54requests/s]Progress:   9%|▉         | 90/1000 [00:16<03:00,  5.05requests/s]Progress:  10%|█         | 100/1000 [00:17<02:36,  5.74requests/s]Progress:  11%|█         | 110/1000 [00:18<02:25,  6.12requests/s]Progress:  12%|█▏        | 120/1000 [00:19<02:08,  6.83requests/s]Progress:  13%|█▎        | 130/1000 [00:21<02:12,  6.55requests/s]Progress:  14%|█▍        | 140/1000 [00:23<02:24,  5.93requests/s]Progress:  15%|█▌        | 150/1000 [00:25<02:38,  5.38requests/s]Progress:  16%|█▌        | 160/1000 [00:27<02:18,  6.05requests/s]Progress:  17%|█▋        | 170/1000 [00:28<02:09,  6.39requests/s]Progress:  18%|█▊        | 180/1000 [00:29<02:02,  6.70requests/s]Progress:  19%|█▉        | 190/1000 [00:30<01:53,  7.11requests/s]Progress:  20%|██        | 200/1000 [00:33<02:12,  6.02requests/s]Progress:  21%|██        | 210/1000 [00:35<02:20,  5.62requests/s]Progress:  22%|██▏       | 220/1000 [00:37<02:19,  5.59requests/s]Progress:  23%|██▎       | 230/1000 [00:38<02:07,  6.03requests/s]Progress:  24%|██▍       | 240/1000 [00:39<01:53,  6.72requests/s]Progress:  25%|██▌       | 250/1000 [00:40<01:49,  6.87requests/s]Progress:  26%|██▌       | 260/1000 [00:41<01:39,  7.45requests/s]Progress:  27%|██▋       | 270/1000 [00:43<01:38,  7.41requests/s]Progress:  28%|██▊       | 280/1000 [00:44<01:32,  7.76requests/s]Progress:  29%|██▉       | 290/1000 [00:45<01:32,  7.65requests/s]Progress:  30%|███       | 300/1000 [00:46<01:27,  8.00requests/s]Progress:  31%|███       | 310/1000 [00:48<01:28,  7.81requests/s]Progress:  32%|███▏      | 320/1000 [00:49<01:24,  8.07requests/s]Progress:  33%|███▎      | 330/1000 [00:50<01:26,  7.78requests/s]Progress:  34%|███▍      | 340/1000 [00:52<01:22,  7.99requests/s]Progress:  35%|███▌      | 350/1000 [00:53<01:24,  7.72requests/s]Progress:  36%|███▌      | 360/1000 [00:54<01:19,  8.00requests/s]Progress:  37%|███▋      | 370/1000 [00:55<01:21,  7.74requests/s]Progress:  38%|███▊      | 380/1000 [00:57<01:22,  7.56requests/s]Progress:  39%|███▉      | 390/1000 [00:58<01:17,  7.89requests/s]Progress:  40%|████      | 400/1000 [00:59<01:18,  7.69requests/s]Progress:  41%|████      | 410/1000 [01:01<01:18,  7.53requests/s]Progress:  42%|████▏     | 420/1000 [01:02<01:13,  7.88requests/s]Progress:  43%|████▎     | 430/1000 [01:03<01:14,  7.69requests/s]Progress:  44%|████▍     | 440/1000 [01:04<01:09,  8.01requests/s]Progress:  45%|████▌     | 450/1000 [01:06<01:14,  7.34requests/s]Progress:  46%|████▌     | 460/1000 [01:07<01:10,  7.64requests/s]Progress:  47%|████▋     | 470/1000 [01:09<01:10,  7.54requests/s]Progress:  48%|████▊     | 480/1000 [01:10<01:06,  7.77requests/s]Progress:  49%|████▉     | 490/1000 [01:11<01:06,  7.64requests/s]Progress:  50%|█████     | 500/1000 [01:13<01:07,  7.40requests/s]Progress:  51%|█████     | 510/1000 [01:14<01:03,  7.72requests/s]Progress:  52%|█████▏    | 520/1000 [01:15<01:05,  7.38requests/s]Progress:  53%|█████▎    | 530/1000 [01:16<01:00,  7.71requests/s]Progress:  54%|█████▍    | 540/1000 [01:18<01:00,  7.54requests/s]Progress:  55%|█████▌    | 550/1000 [01:19<00:57,  7.89requests/s]Progress:  56%|█████▌    | 560/1000 [01:20<00:57,  7.65requests/s]Progress:  57%|█████▋    | 570/1000 [01:22<00:57,  7.45requests/s]Progress:  58%|█████▊    | 580/1000 [01:23<00:54,  7.75requests/s]Progress:  59%|█████▉    | 590/1000 [01:24<00:54,  7.51requests/s]Progress:  60%|██████    | 600/1000 [01:25<00:50,  7.87requests/s]Progress:  61%|██████    | 610/1000 [01:27<00:51,  7.56requests/s]Progress:  62%|██████▏   | 620/1000 [01:28<00:52,  7.30requests/s]Progress:  63%|██████▎   | 630/1000 [01:30<00:48,  7.69requests/s]Progress:  64%|██████▍   | 640/1000 [01:31<00:48,  7.48requests/s]Progress:  65%|██████▌   | 650/1000 [01:32<00:44,  7.82requests/s]Progress:  66%|██████▌   | 660/1000 [01:34<00:45,  7.51requests/s]Progress:  67%|██████▋   | 670/1000 [01:35<00:42,  7.80requests/s]Progress:  68%|██████▊   | 680/1000 [01:36<00:42,  7.59requests/s]Progress:  69%|██████▉   | 690/1000 [01:38<00:41,  7.41requests/s]Progress:  70%|███████   | 700/1000 [01:39<00:39,  7.56requests/s]Progress:  71%|███████   | 710/1000 [01:40<00:39,  7.31requests/s]Progress:  72%|███████▏  | 720/1000 [01:42<00:38,  7.22requests/s]Progress:  73%|███████▎  | 730/1000 [01:43<00:36,  7.49requests/s]Progress:  74%|███████▍  | 740/1000 [01:44<00:35,  7.33requests/s]Progress:  75%|███████▌  | 750/1000 [01:46<00:32,  7.71requests/s]Progress:  76%|███████▌  | 760/1000 [01:47<00:32,  7.46requests/s]Progress:  77%|███████▋  | 770/1000 [01:48<00:29,  7.82requests/s]Progress:  78%|███████▊  | 780/1000 [01:50<00:29,  7.55requests/s]Progress:  79%|███████▉  | 790/1000 [01:51<00:28,  7.35requests/s]Progress:  80%|████████  | 800/1000 [01:52<00:25,  7.70requests/s]Progress:  81%|████████  | 810/1000 [01:54<00:25,  7.52requests/s]Progress:  82%|████████▏ | 820/1000 [01:55<00:22,  7.85requests/s]Progress:  83%|████████▎ | 830/1000 [01:56<00:22,  7.54requests/s]Progress:  84%|████████▍ | 840/1000 [01:57<00:20,  7.88requests/s]Progress:  85%|████████▌ | 850/1000 [01:59<00:19,  7.62requests/s]Progress:  86%|████████▌ | 860/1000 [02:00<00:17,  7.88requests/s]Progress:  87%|████████▋ | 870/1000 [02:01<00:17,  7.54requests/s]Progress:  88%|████████▊ | 880/1000 [02:02<00:15,  7.84requests/s]Progress:  89%|████████▉ | 890/1000 [02:04<00:14,  7.54requests/s]Progress:  90%|█████████ | 900/1000 [02:05<00:12,  7.76requests/s]Progress:  91%|█████████ | 910/1000 [02:07<00:11,  7.52requests/s]Progress:  92%|█████████▏| 920/1000 [02:08<00:10,  7.37requests/s]Progress:  93%|█████████▎| 930/1000 [02:09<00:09,  7.76requests/s]Progress:  94%|█████████▍| 940/1000 [02:11<00:08,  7.11requests/s]Progress:  95%|█████████▌| 950/1000 [02:12<00:06,  7.38requests/s]Progress:  96%|█████████▌| 960/1000 [02:13<00:05,  7.20requests/s]Progress:  97%|█████████▋| 970/1000 [02:15<00:03,  7.56requests/s]Progress:  98%|█████████▊| 980/1000 [02:16<00:02,  7.39requests/s]Progress:  99%|█████████▉| 990/1000 [02:17<00:01,  7.66requests/s]Progress: 100%|██████████| 1000/1000 [02:19<00:00,  7.34requests/s]Progress: 100%|██████████| 1000/1000 [02:19<00:00,  7.18requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  61,955.24 │    172.78 │ 153,583.14 │ 140,244.44 │ 128,248.67 │ 125,246.62 │
+│            Time To Second Token (ms) │     263.32 │     22.45 │     611.23 │     363.76 │     326.37 │     308.61 │
+│                 Request Latency (ms) │ 193,239.50 │ 44,820.10 │ 303,055.69 │ 279,939.38 │ 263,076.06 │ 258,008.81 │
+│             Inter Token Latency (ms) │      43.78 │     14.03 │      94.54 │      75.49 │      50.16 │      45.66 │
+│     Output Token Throughput Per User │      23.89 │     10.58 │      71.30 │      36.02 │      34.11 │      23.13 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,999.82 │  2,995.00 │   3,003.00 │   3,000.00 │   3,000.00 │   3,000.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     556.01 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.19 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-16 16:45:01] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                     json_exporter.py:64
+[2025-12-16 16:45:01] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                       csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: hf
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+   Endpoint: http://localhost:8000
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8000
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8000 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6134.69 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_hf_vllm_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.19 req/s
+   Request Latency (avg): 193239.50 ms
+   Request Latency (p95): 266329.38 ms
+   Time to First Token (avg): 61955.24 ms
+   Time to First Token (p95): 130967.35 ms
+   Inter-token Latency (avg): 43.78 ms
+   Output Token Throughput: 556.01 tokens/s
+   Output Tokens (avg): 2999.82
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+================================================================================
+
+🐳 Stopping container: 0b6d875c49d1
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-hf-vllm
+
+✅ Test 1/10 complete
+
+
+==============================================================================
+Test 2/10: hf/trtllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm' is not running
+
+🚀 Starting hf container with trtllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: trtllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/hf
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm
+   Port: 8010
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: 6f151f5eeaf44f3b2dec1c4fed8853582a7ea0bef4dcf99b5963468a18b41572
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8010
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8010/v1/models
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-16 16:47:32] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-16 16:47:32] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-16 16:47:32] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-16 16:47:32] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-16 16:47:36] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8010 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                            
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                           
+[2025-12-16 18:22:41] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                      profile_data_parser.py:66
+[2025-12-16 18:22:52] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:02<03:37,  4.55requests/s]Progress:   2%|▏         | 20/1000 [00:04<03:41,  4.43requests/s]Progress:   3%|▎         | 30/1000 [00:06<03:07,  5.18requests/s]Progress:   4%|▍         | 40/1000 [00:07<02:46,  5.78requests/s]Progress:   5%|▌         | 50/1000 [00:08<02:22,  6.67requests/s]Progress:   6%|▌         | 60/1000 [00:09<02:16,  6.90requests/s]Progress:   7%|▋         | 70/1000 [00:11<02:25,  6.38requests/s]Progress:   8%|▊         | 80/1000 [00:14<02:47,  5.49requests/s]Progress:   9%|▉         | 90/1000 [00:16<02:55,  5.20requests/s]Progress:  10%|█         | 100/1000 [00:17<02:30,  5.96requests/s]Progress:  11%|█         | 110/1000 [00:18<02:25,  6.13requests/s]Progress:  12%|█▏        | 120/1000 [00:20<02:10,  6.73requests/s]Progress:  13%|█▎        | 130/1000 [00:21<02:16,  6.37requests/s]Progress:  14%|█▍        | 140/1000 [00:23<02:30,  5.70requests/s]Progress:  15%|█▌        | 150/1000 [00:26<02:43,  5.21requests/s]Progress:  16%|█▌        | 160/1000 [00:27<02:23,  5.85requests/s]Progress:  17%|█▋        | 170/1000 [00:28<02:15,  6.13requests/s]Progress:  18%|█▊        | 180/1000 [00:30<02:08,  6.40requests/s]Progress:  19%|█▉        | 190/1000 [00:31<01:59,  6.79requests/s]Progress:  20%|██        | 200/1000 [00:33<02:19,  5.75requests/s]Progress:  21%|██        | 210/1000 [00:36<02:25,  5.44requests/s]Progress:  22%|██▏       | 220/1000 [00:37<02:23,  5.44requests/s]Progress:  23%|██▎       | 230/1000 [00:39<02:10,  5.89requests/s]Progress:  24%|██▍       | 240/1000 [00:40<02:00,  6.29requests/s]Progress:  25%|██▌       | 250/1000 [00:42<01:55,  6.49requests/s]Progress:  26%|██▌       | 260/1000 [00:43<01:45,  6.99requests/s]Progress:  27%|██▋       | 270/1000 [00:44<01:43,  7.03requests/s]Progress:  28%|██▊       | 280/1000 [00:45<01:41,  7.07requests/s]Progress:  29%|██▉       | 290/1000 [00:47<01:34,  7.52requests/s]Progress:  30%|███       | 300/1000 [00:48<01:34,  7.43requests/s]Progress:  31%|███       | 310/1000 [00:49<01:28,  7.76requests/s]Progress:  32%|███▏      | 320/1000 [00:51<01:29,  7.58requests/s]Progress:  33%|███▎      | 330/1000 [00:52<01:25,  7.87requests/s]Progress:  34%|███▍      | 340/1000 [00:53<01:27,  7.57requests/s]Progress:  35%|███▌      | 350/1000 [00:54<01:23,  7.78requests/s]Progress:  36%|███▌      | 360/1000 [00:56<01:24,  7.58requests/s]Progress:  37%|███▋      | 370/1000 [00:57<01:25,  7.40requests/s]Progress:  38%|███▊      | 380/1000 [00:58<01:19,  7.76requests/s]Progress:  39%|███▉      | 390/1000 [01:00<01:25,  7.14requests/s]Progress:  40%|████      | 400/1000 [01:01<01:19,  7.58requests/s]Progress:  41%|████      | 410/1000 [01:03<01:20,  7.29requests/s]Progress:  42%|████▏     | 420/1000 [01:04<01:16,  7.57requests/s]Progress:  43%|████▎     | 430/1000 [01:05<01:16,  7.43requests/s]Progress:  44%|████▍     | 440/1000 [01:06<01:12,  7.71requests/s]Progress:  45%|████▌     | 450/1000 [01:08<01:13,  7.49requests/s]Progress:  46%|████▌     | 460/1000 [01:09<01:13,  7.36requests/s]Progress:  47%|████▋     | 470/1000 [01:10<01:09,  7.62requests/s]Progress:  48%|████▊     | 480/1000 [01:12<01:09,  7.44requests/s]Progress:  49%|████▉     | 490/1000 [01:13<01:05,  7.78requests/s]Progress:  50%|█████     | 500/1000 [01:14<01:06,  7.54requests/s]Progress:  51%|█████     | 510/1000 [01:16<01:06,  7.39requests/s]Progress:  52%|█████▏    | 520/1000 [01:17<01:02,  7.74requests/s]Progress:  53%|█████▎    | 530/1000 [01:18<01:02,  7.54requests/s]Progress:  54%|█████▍    | 540/1000 [01:20<00:58,  7.83requests/s]Progress:  55%|█████▌    | 550/1000 [01:21<00:59,  7.54requests/s]Progress:  56%|█████▌    | 560/1000 [01:22<00:59,  7.46requests/s]Progress:  57%|█████▋    | 570/1000 [01:24<00:56,  7.68requests/s]Progress:  58%|█████▊    | 580/1000 [01:25<00:57,  7.36requests/s]Progress:  59%|█████▉    | 590/1000 [01:26<00:53,  7.67requests/s]Progress:  60%|██████    | 600/1000 [01:28<00:53,  7.50requests/s]Progress:  61%|██████    | 610/1000 [01:29<00:50,  7.78requests/s]Progress:  62%|██████▏   | 620/1000 [01:30<00:50,  7.48requests/s]Progress:  63%|██████▎   | 630/1000 [01:32<00:51,  7.25requests/s]Progress:  64%|██████▍   | 640/1000 [01:33<00:47,  7.55requests/s]Progress:  65%|██████▌   | 650/1000 [01:34<00:47,  7.35requests/s]Progress:  66%|██████▌   | 660/1000 [01:36<00:44,  7.65requests/s]Progress:  67%|██████▋   | 670/1000 [01:37<00:44,  7.46requests/s]Progress:  68%|██████▊   | 680/1000 [01:38<00:41,  7.72requests/s]Progress:  69%|██████▉   | 690/1000 [01:40<00:41,  7.52requests/s]Progress:  70%|███████   | 700/1000 [01:41<00:38,  7.70requests/s]Progress:  71%|███████   | 710/1000 [01:42<00:39,  7.41requests/s]Progress:  72%|███████▏  | 720/1000 [01:44<00:38,  7.23requests/s]Progress:  73%|███████▎  | 730/1000 [01:45<00:35,  7.56requests/s]Progress:  74%|███████▍  | 740/1000 [01:46<00:35,  7.26requests/s]Progress:  75%|███████▌  | 750/1000 [01:48<00:35,  7.14requests/s]Progress:  76%|███████▌  | 760/1000 [01:49<00:32,  7.45requests/s]Progress:  77%|███████▋  | 770/1000 [01:51<00:31,  7.29requests/s]Progress:  78%|███████▊  | 780/1000 [01:52<00:28,  7.63requests/s]Progress:  79%|███████▉  | 790/1000 [01:53<00:28,  7.43requests/s]Progress:  80%|████████  | 800/1000 [01:54<00:26,  7.69requests/s]Progress:  81%|████████  | 810/1000 [01:56<00:25,  7.35requests/s]Progress:  82%|████████▏ | 820/1000 [01:57<00:23,  7.65requests/s]Progress:  83%|████████▎ | 830/1000 [01:59<00:23,  7.34requests/s]Progress:  84%|████████▍ | 840/1000 [02:00<00:20,  7.64requests/s]Progress:  85%|████████▌ | 850/1000 [02:01<00:20,  7.39requests/s]Progress:  86%|████████▌ | 860/1000 [02:03<00:19,  7.19requests/s]Progress:  87%|████████▋ | 870/1000 [02:04<00:17,  7.56requests/s]Progress:  88%|████████▊ | 880/1000 [02:05<00:16,  7.31requests/s]Progress:  89%|████████▉ | 890/1000 [02:07<00:14,  7.49requests/s]Progress:  90%|█████████ | 900/1000 [02:08<00:13,  7.27requests/s]Progress:  91%|█████████ | 910/1000 [02:09<00:12,  7.50requests/s]Progress:  92%|█████████▏| 920/1000 [02:11<00:11,  7.21requests/s]Progress:  93%|█████████▎| 930/1000 [02:12<00:09,  7.48requests/s]Progress:  94%|█████████▍| 940/1000 [02:13<00:08,  7.23requests/s]Progress:  95%|█████████▌| 950/1000 [02:15<00:06,  7.15requests/s]Progress:  96%|█████████▌| 960/1000 [02:16<00:05,  7.43requests/s]Progress:  97%|█████████▋| 970/1000 [02:18<00:04,  7.28requests/s]Progress:  98%|█████████▊| 980/1000 [02:19<00:02,  7.52requests/s]Progress:  99%|█████████▉| 990/1000 [02:20<00:01,  7.29requests/s]Progress: 100%|██████████| 1000/1000 [02:21<00:00,  7.60requests/s]Progress: 100%|██████████| 1000/1000 [02:21<00:00,  7.04requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  72,550.09 │    275.01 │ 140,122.31 │ 129,870.66 │ 115,819.21 │ 114,159.73 │
+│            Time To Second Token (ms) │     963.66 │      0.00 │   1,811.49 │   1,620.95 │   1,380.58 │   1,312.17 │
+│                 Request Latency (ms) │ 183,762.28 │ 51,297.49 │ 253,815.09 │ 247,623.38 │ 234,918.92 │ 228,724.73 │
+│             Inter Token Latency (ms) │      38.15 │     16.66 │      72.96 │      57.30 │      42.57 │      39.80 │
+│     Output Token Throughput Per User │      26.83 │     13.71 │      60.04 │      37.47 │      34.01 │      26.52 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,933.23 │  1,683.00 │   3,002.00 │   2,998.00 │   2,997.00 │   2,996.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     568.41 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.19 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-16 18:25:15] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                   json_exporter.py:64
+[2025-12-16 18:25:15] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                     csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: hf
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: trtllm
+   Endpoint: http://localhost:8010
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8010
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8010 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 5865.62 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_hf_trtllm_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.19 req/s
+   Request Latency (avg): 183762.28 ms
+   Request Latency (p95): 241119.13 ms
+   Time to First Token (avg): 72550.09 ms
+   Time to First Token (p95): 118279.96 ms
+   Inter-token Latency (avg): 38.15 ms
+   Output Token Throughput: 568.41 tokens/s
+   Output Tokens (avg): 2933.23
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm
+================================================================================
+
+🐳 Stopping container: 6f151f5eeaf4
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-hf-trtllm
+
+✅ Test 2/10 complete
+
+
+==============================================================================
+Test 3/10: hf/sglang
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-sglang
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-hf-sglang' is not running
+
+🚀 Starting hf container with sglang engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: sglang
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/hf
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-hf-sglang
+   Port: 8020
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: aacafc698f1b80f5f0e251a53072dc2d688ae91e1bfb0d088cede5021bc7d1ff
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8020
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-sglang' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-hf-sglang -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8020/v1/models
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-16 18:26:47] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-16 18:26:47] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-16 18:26:47] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-16 18:26:47] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-16 18:26:52] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8020 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                            
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                           
+[2025-12-16 20:17:38] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                      profile_data_parser.py:66
+[2025-12-16 20:17:51] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:41,  6.12requests/s]Progress:   2%|▏         | 20/1000 [00:03<03:01,  5.41requests/s]Progress:   3%|▎         | 30/1000 [00:04<02:35,  6.24requests/s]Progress:   4%|▍         | 40/1000 [00:06<02:17,  6.96requests/s]Progress:   5%|▌         | 50/1000 [00:07<02:16,  6.97requests/s]Progress:   6%|▌         | 60/1000 [00:08<02:07,  7.36requests/s]Progress:   7%|▋         | 70/1000 [00:10<02:30,  6.20requests/s]Progress:   8%|▊         | 80/1000 [00:12<02:39,  5.77requests/s]Progress:   9%|▉         | 90/1000 [00:14<02:33,  5.94requests/s]Progress:  10%|█         | 100/1000 [00:15<02:15,  6.62requests/s]Progress:  11%|█         | 110/1000 [00:16<02:03,  7.23requests/s]Progress:  12%|█▏        | 120/1000 [00:18<02:04,  7.08requests/s]Progress:  13%|█▎        | 130/1000 [00:19<02:06,  6.87requests/s]Progress:  14%|█▍        | 140/1000 [00:22<02:29,  5.76requests/s]Progress:  15%|█▌        | 150/1000 [00:24<02:36,  5.42requests/s]Progress:  16%|█▌        | 160/1000 [00:25<02:27,  5.71requests/s]Progress:  17%|█▋        | 170/1000 [00:27<02:17,  6.05requests/s]Progress:  18%|█▊        | 180/1000 [00:28<02:03,  6.64requests/s]Progress:  19%|█▉        | 190/1000 [00:29<02:03,  6.55requests/s]Progress:  20%|██        | 200/1000 [00:31<02:15,  5.91requests/s]Progress:  21%|██        | 210/1000 [00:34<02:30,  5.25requests/s]Progress:  22%|██▏       | 220/1000 [00:35<02:13,  5.82requests/s]Progress:  23%|██▎       | 230/1000 [00:36<02:00,  6.40requests/s]Progress:  24%|██▍       | 240/1000 [00:38<01:58,  6.43requests/s]Progress:  25%|██▌       | 250/1000 [00:39<01:49,  6.85requests/s]Progress:  26%|██▌       | 260/1000 [00:41<01:48,  6.85requests/s]Progress:  27%|██▋       | 270/1000 [00:42<01:42,  7.15requests/s]Progress:  28%|██▊       | 280/1000 [00:43<01:45,  6.80requests/s]Progress:  29%|██▉       | 290/1000 [00:45<01:47,  6.61requests/s]Progress:  30%|███       | 300/1000 [00:46<01:39,  7.01requests/s]Progress:  31%|███       | 310/1000 [00:48<01:40,  6.85requests/s]Progress:  32%|███▏      | 320/1000 [00:49<01:33,  7.24requests/s]Progress:  33%|███▎      | 330/1000 [00:51<01:34,  7.12requests/s]Progress:  34%|███▍      | 340/1000 [00:52<01:35,  6.88requests/s]Progress:  35%|███▌      | 350/1000 [00:53<01:29,  7.25requests/s]Progress:  36%|███▌      | 360/1000 [00:55<01:31,  7.02requests/s]Progress:  37%|███▋      | 370/1000 [00:56<01:26,  7.27requests/s]Progress:  38%|███▊      | 380/1000 [00:58<01:27,  7.09requests/s]Progress:  39%|███▉      | 390/1000 [00:59<01:29,  6.82requests/s]Progress:  40%|████      | 400/1000 [01:00<01:22,  7.28requests/s]Progress:  41%|████      | 410/1000 [01:02<01:25,  6.91requests/s]Progress:  42%|████▏     | 420/1000 [01:03<01:16,  7.54requests/s]Progress:  43%|████▎     | 430/1000 [01:04<01:14,  7.62requests/s]Progress:  44%|████▍     | 440/1000 [01:05<01:08,  8.16requests/s]Progress:  45%|████▌     | 450/1000 [01:07<01:08,  8.07requests/s]Progress:  46%|████▌     | 460/1000 [01:08<01:08,  7.84requests/s]Progress:  47%|████▋     | 470/1000 [01:09<01:06,  7.95requests/s]Progress:  48%|████▊     | 480/1000 [01:11<01:09,  7.53requests/s]Progress:  49%|████▉     | 490/1000 [01:12<01:05,  7.79requests/s]Progress:  50%|█████     | 500/1000 [01:13<01:08,  7.29requests/s]Progress:  51%|█████     | 510/1000 [01:15<01:09,  7.00requests/s]Progress:  52%|█████▏    | 520/1000 [01:16<01:04,  7.39requests/s]Progress:  53%|█████▎    | 530/1000 [01:18<01:05,  7.22requests/s]Progress:  54%|█████▍    | 540/1000 [01:19<01:00,  7.58requests/s]Progress:  55%|█████▌    | 550/1000 [01:20<01:03,  7.08requests/s]Progress:  56%|█████▌    | 560/1000 [01:22<00:59,  7.41requests/s]Progress:  57%|█████▋    | 570/1000 [01:23<01:01,  7.04requests/s]Progress:  58%|█████▊    | 580/1000 [01:25<01:02,  6.74requests/s]Progress:  59%|█████▉    | 590/1000 [01:26<00:57,  7.12requests/s]Progress:  60%|██████    | 600/1000 [01:28<00:57,  7.00requests/s]Progress:  61%|██████    | 610/1000 [01:29<00:51,  7.63requests/s]Progress:  62%|██████▏   | 620/1000 [01:30<00:49,  7.66requests/s]Progress:  63%|██████▎   | 630/1000 [01:31<00:48,  7.70requests/s]Progress:  64%|██████▍   | 640/1000 [01:32<00:46,  7.74requests/s]Progress:  65%|██████▌   | 650/1000 [01:34<00:46,  7.54requests/s]Progress:  66%|██████▌   | 660/1000 [01:35<00:42,  7.98requests/s]Progress:  67%|██████▋   | 670/1000 [01:36<00:41,  7.90requests/s]Progress:  68%|██████▊   | 680/1000 [01:38<00:41,  7.80requests/s]Progress:  69%|██████▉   | 690/1000 [01:39<00:37,  8.26requests/s]Progress:  70%|███████   | 700/1000 [01:40<00:36,  8.22requests/s]Progress:  71%|███████   | 710/1000 [01:41<00:33,  8.65requests/s]Progress:  72%|███████▏  | 720/1000 [01:42<00:32,  8.57requests/s]Progress:  73%|███████▎  | 730/1000 [01:43<00:32,  8.42requests/s]Progress:  74%|███████▍  | 740/1000 [01:44<00:29,  8.76requests/s]Progress:  75%|███████▌  | 750/1000 [01:45<00:29,  8.60requests/s]Progress:  76%|███████▌  | 760/1000 [01:46<00:26,  9.04requests/s]Progress:  77%|███████▋  | 770/1000 [01:48<00:26,  8.80requests/s]Progress:  78%|███████▊  | 780/1000 [01:49<00:27,  8.11requests/s]Progress:  79%|███████▉  | 790/1000 [01:50<00:25,  8.15requests/s]Progress:  80%|████████  | 800/1000 [01:52<00:26,  7.56requests/s]Progress:  81%|████████  | 810/1000 [01:53<00:24,  7.83requests/s]Progress:  82%|████████▏ | 820/1000 [01:55<00:24,  7.32requests/s]Progress:  83%|████████▎ | 830/1000 [01:56<00:22,  7.55requests/s]Progress:  84%|████████▍ | 840/1000 [01:57<00:22,  7.23requests/s]Progress:  85%|████████▌ | 850/1000 [01:59<00:21,  7.02requests/s]Progress:  86%|████████▌ | 860/1000 [02:00<00:19,  7.21requests/s]Progress:  87%|████████▋ | 870/1000 [02:02<00:18,  6.96requests/s]Progress:  88%|████████▊ | 880/1000 [02:03<00:16,  7.34requests/s]Progress:  89%|████████▉ | 890/1000 [02:04<00:15,  7.07requests/s]Progress:  90%|█████████ | 900/1000 [02:06<00:13,  7.43requests/s]Progress:  91%|█████████ | 910/1000 [02:07<00:12,  7.46requests/s]Progress:  92%|█████████▏| 920/1000 [02:08<00:10,  7.70requests/s]Progress:  93%|█████████▎| 930/1000 [02:09<00:08,  8.27requests/s]Progress:  94%|█████████▍| 940/1000 [02:10<00:07,  8.27requests/s]Progress:  95%|█████████▌| 950/1000 [02:12<00:05,  8.43requests/s]Progress:  96%|█████████▌| 960/1000 [02:13<00:05,  7.99requests/s]Progress:  97%|█████████▋| 970/1000 [02:14<00:03,  8.34requests/s]Progress:  98%|█████████▊| 980/1000 [02:15<00:02,  8.10requests/s]Progress:  99%|█████████▉| 990/1000 [02:17<00:01,  7.85requests/s]Progress: 100%|██████████| 1000/1000 [02:18<00:00,  8.23requests/s]Progress: 100%|██████████| 1000/1000 [02:18<00:00,  7.23requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  70,544.74 │    171.49 │ 200,934.05 │ 183,675.33 │ 168,465.08 │ 115,485.39 │
+│            Time To Second Token (ms) │  10,850.54 │      0.05 │  35,890.69 │  32,775.74 │  25,245.36 │  17,840.47 │
+│                 Request Latency (ms) │ 222,166.77 │ 19,423.45 │ 498,226.56 │ 355,998.75 │ 323,046.34 │ 281,772.65 │
+│             Inter Token Latency (ms) │      50.56 │      5.98 │     106.36 │      83.57 │      59.31 │      54.47 │
+│     Output Token Throughput Per User │      21.23 │      9.40 │     167.18 │      58.35 │      23.92 │      21.41 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,999.87 │  2,995.00 │   3,011.00 │   3,001.00 │   3,000.00 │   3,000.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     500.59 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.17 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-16 20:20:11] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                   json_exporter.py:64
+[2025-12-16 20:20:11] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                     csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: hf
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: sglang
+   Endpoint: http://localhost:8020
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8020
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8020 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6806.87 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_hf_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_hf_sglang_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.17 req/s
+   Request Latency (avg): 222166.77 ms
+   Request Latency (p95): 326647.83 ms
+   Time to First Token (avg): 70544.74 ms
+   Time to First Token (p95): 174203.03 ms
+   Inter-token Latency (avg): 50.56 ms
+   Output Token Throughput: 500.59 tokens/s
+   Output Tokens (avg): 2999.87
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-sglang
+================================================================================
+
+🐳 Stopping container: aacafc698f1b
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-hf-sglang
+
+✅ Test 3/10 complete
+
+
+==============================================================================
+Test 4/10: nim/vllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-nim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-nim-vllm' is not running
+
+🚀 Starting nim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+
+❌ Error: NIM deployment is not yet implemented
+
+❌ Failed to start container
+
+==============================================================================
+Test 5/10: unim/vllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' is not running
+
+🚀 Starting unim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: 3bca964b1f3ccc8e9016425b2c2a2c2967acc13a4705d36f57c16d30b99ecdc1
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8000
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-vllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8000/v1/health/ready
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+   Still starting... (130s elapsed, HTTP 000)
+   Still starting... (140s elapsed, HTTP 000)
+   Still starting... (150s elapsed, HTTP 000)
+   Still starting... (160s elapsed, HTTP 000)
+   Still starting... (170s elapsed, HTTP 000)
+   Still starting... (180s elapsed, HTTP 000)
+   Still starting... (190s elapsed, HTTP 000)
+   Still starting... (200s elapsed, HTTP 000)
+   Still starting... (210s elapsed, HTTP 000)
+   Still starting... (220s elapsed, HTTP 000)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-16 20:24:24] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-16 20:24:24] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-16 20:24:24] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-16 20:24:24] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-16 20:24:29] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8000 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                            
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                           
+[2025-12-16 22:11:54] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                      profile_data_parser.py:66
+[2025-12-16 22:12:05] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:52,  5.73requests/s]Progress:   2%|▏         | 20/1000 [00:03<03:10,  5.15requests/s]Progress:   3%|▎         | 30/1000 [00:04<02:33,  6.31requests/s]Progress:   4%|▍         | 40/1000 [00:06<02:16,  7.05requests/s]Progress:   5%|▌         | 50/1000 [00:06<01:49,  8.68requests/s]Progress:   6%|▌         | 60/1000 [00:07<01:40,  9.39requests/s]Progress:   7%|▋         | 70/1000 [00:08<01:43,  8.96requests/s]Progress:   8%|▊         | 80/1000 [00:10<02:07,  7.24requests/s]Progress:   9%|▉         | 90/1000 [00:12<02:11,  6.90requests/s]Progress:  10%|█         | 100/1000 [00:13<01:54,  7.88requests/s]Progress:  11%|█         | 110/1000 [00:14<01:51,  8.01requests/s]Progress:  12%|█▏        | 120/1000 [00:15<01:41,  8.67requests/s]Progress:  13%|█▎        | 130/1000 [00:17<01:55,  7.54requests/s]Progress:  14%|█▍        | 140/1000 [00:19<02:22,  6.04requests/s]Progress:  15%|█▌        | 150/1000 [00:21<02:29,  5.68requests/s]Progress:  16%|█▌        | 160/1000 [00:23<02:20,  5.96requests/s]Progress:  17%|█▋        | 170/1000 [00:24<02:06,  6.54requests/s]Progress:  18%|█▊        | 180/1000 [00:25<02:00,  6.82requests/s]Progress:  19%|█▉        | 190/1000 [00:26<01:52,  7.20requests/s]Progress:  20%|██        | 200/1000 [00:29<02:14,  5.94requests/s]Progress:  21%|██        | 210/1000 [00:31<02:26,  5.38requests/s]Progress:  22%|██▏       | 220/1000 [00:32<02:15,  5.74requests/s]Progress:  23%|██▎       | 230/1000 [00:34<02:05,  6.12requests/s]Progress:  24%|██▍       | 240/1000 [00:35<01:52,  6.77requests/s]Progress:  25%|██▌       | 250/1000 [00:36<01:48,  6.92requests/s]Progress:  26%|██▌       | 260/1000 [00:38<01:45,  7.00requests/s]Progress:  27%|██▋       | 270/1000 [00:39<01:37,  7.49requests/s]Progress:  28%|██▊       | 280/1000 [00:40<01:38,  7.34requests/s]Progress:  29%|██▉       | 290/1000 [00:41<01:31,  7.77requests/s]Progress:  30%|███       | 300/1000 [00:43<01:32,  7.54requests/s]Progress:  31%|███       | 310/1000 [00:44<01:27,  7.91requests/s]Progress:  32%|███▏      | 320/1000 [00:45<01:28,  7.67requests/s]Progress:  33%|███▎      | 330/1000 [00:47<01:28,  7.53requests/s]Progress:  34%|███▍      | 340/1000 [00:48<01:24,  7.78requests/s]Progress:  35%|███▌      | 350/1000 [00:49<01:25,  7.58requests/s]Progress:  36%|███▌      | 360/1000 [00:50<01:20,  7.98requests/s]Progress:  37%|███▋      | 370/1000 [00:52<01:20,  7.78requests/s]Progress:  38%|███▊      | 380/1000 [00:53<01:16,  8.10requests/s]Progress:  39%|███▉      | 390/1000 [00:54<01:18,  7.78requests/s]Progress:  40%|████      | 400/1000 [00:56<01:19,  7.55requests/s]Progress:  41%|████      | 410/1000 [00:57<01:14,  7.93requests/s]Progress:  42%|████▏     | 420/1000 [00:58<01:15,  7.69requests/s]Progress:  43%|████▎     | 430/1000 [00:59<01:11,  7.98requests/s]Progress:  44%|████▍     | 440/1000 [01:01<01:13,  7.65requests/s]Progress:  45%|████▌     | 450/1000 [01:02<01:12,  7.55requests/s]Progress:  46%|████▌     | 460/1000 [01:03<01:08,  7.90requests/s]Progress:  47%|████▋     | 470/1000 [01:05<01:10,  7.55requests/s]Progress:  48%|████▊     | 480/1000 [01:06<01:06,  7.83requests/s]Progress:  49%|████▉     | 490/1000 [01:07<01:07,  7.60requests/s]Progress:  50%|█████     | 500/1000 [01:09<01:07,  7.39requests/s]Progress:  51%|█████     | 510/1000 [01:10<01:03,  7.74requests/s]Progress:  52%|█████▏    | 520/1000 [01:11<01:04,  7.48requests/s]Progress:  53%|█████▎    | 530/1000 [01:12<00:59,  7.84requests/s]Progress:  54%|█████▍    | 540/1000 [01:14<01:00,  7.61requests/s]Progress:  55%|█████▌    | 550/1000 [01:15<01:00,  7.46requests/s]Progress:  56%|█████▌    | 560/1000 [01:16<00:56,  7.72requests/s]Progress:  57%|█████▋    | 570/1000 [01:18<00:57,  7.53requests/s]Progress:  58%|█████▊    | 580/1000 [01:19<00:53,  7.92requests/s]Progress:  59%|█████▉    | 590/1000 [01:20<00:53,  7.67requests/s]Progress:  60%|██████    | 600/1000 [01:21<00:50,  7.97requests/s]Progress:  61%|██████    | 610/1000 [01:23<00:50,  7.74requests/s]Progress:  62%|██████▏   | 620/1000 [01:24<00:47,  7.98requests/s]Progress:  63%|██████▎   | 630/1000 [01:25<00:48,  7.65requests/s]Progress:  64%|██████▍   | 640/1000 [01:27<00:45,  7.93requests/s]Progress:  65%|██████▌   | 650/1000 [01:28<00:45,  7.69requests/s]Progress:  66%|██████▌   | 660/1000 [01:29<00:45,  7.49requests/s]Progress:  67%|██████▋   | 670/1000 [01:31<00:42,  7.80requests/s]Progress:  68%|██████▊   | 680/1000 [01:32<00:42,  7.52requests/s]Progress:  69%|██████▉   | 690/1000 [01:33<00:39,  7.87requests/s]Progress:  70%|███████   | 700/1000 [01:35<00:39,  7.61requests/s]Progress:  71%|███████   | 710/1000 [01:36<00:37,  7.82requests/s]Progress:  72%|███████▏  | 720/1000 [01:37<00:36,  7.58requests/s]Progress:  73%|███████▎  | 730/1000 [01:39<00:36,  7.39requests/s]Progress:  74%|███████▍  | 740/1000 [01:40<00:33,  7.77requests/s]Progress:  75%|███████▌  | 750/1000 [01:41<00:32,  7.59requests/s]Progress:  76%|███████▌  | 760/1000 [01:42<00:30,  7.79requests/s]Progress:  77%|███████▋  | 770/1000 [01:44<00:30,  7.52requests/s]Progress:  78%|███████▊  | 780/1000 [01:45<00:29,  7.37requests/s]Progress:  79%|███████▉  | 790/1000 [01:46<00:27,  7.73requests/s]Progress:  80%|████████  | 800/1000 [01:48<00:26,  7.48requests/s]Progress:  81%|████████  | 810/1000 [01:49<00:24,  7.83requests/s]Progress:  82%|████████▏ | 820/1000 [01:50<00:24,  7.50requests/s]Progress:  83%|████████▎ | 830/1000 [01:51<00:21,  7.91requests/s]Progress:  84%|████████▍ | 840/1000 [01:53<00:20,  7.71requests/s]Progress:  85%|████████▌ | 850/1000 [01:54<00:18,  8.04requests/s]Progress:  86%|████████▌ | 860/1000 [01:55<00:18,  7.72requests/s]Progress:  87%|████████▋ | 870/1000 [01:57<00:16,  7.92requests/s]Progress:  88%|████████▊ | 880/1000 [01:58<00:15,  7.53requests/s]Progress:  89%|████████▉ | 890/1000 [02:00<00:15,  7.29requests/s]Progress:  90%|█████████ | 900/1000 [02:01<00:12,  7.74requests/s]Progress:  91%|█████████ | 910/1000 [02:02<00:12,  7.45requests/s]Progress:  92%|█████████▏| 920/1000 [02:03<00:10,  7.83requests/s]Progress:  93%|█████████▎| 930/1000 [02:05<00:09,  7.54requests/s]Progress:  94%|█████████▍| 940/1000 [02:06<00:08,  7.38requests/s]Progress:  95%|█████████▌| 950/1000 [02:07<00:06,  7.76requests/s]Progress:  96%|█████████▌| 960/1000 [02:09<00:05,  7.54requests/s]Progress:  97%|█████████▋| 970/1000 [02:10<00:03,  7.86requests/s]Progress:  98%|█████████▊| 980/1000 [02:11<00:02,  7.58requests/s]Progress:  99%|█████████▉| 990/1000 [02:12<00:01,  7.78requests/s]Progress: 100%|██████████| 1000/1000 [02:14<00:00,  7.55requests/s]Progress: 100%|██████████| 1000/1000 [02:14<00:00,  7.45requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  74,294.20 │    174.18 │ 163,172.10 │ 147,886.52 │ 133,287.80 │ 132,199.16 │
+│            Time To Second Token (ms) │     338.35 │     23.08 │  27,471.15 │     424.74 │     379.68 │     361.37 │
+│                 Request Latency (ms) │ 208,506.73 │ 26,366.29 │ 306,254.06 │ 290,434.88 │ 270,288.08 │ 268,213.63 │
+│             Inter Token Latency (ms) │      44.79 │      8.14 │      89.18 │      77.96 │      51.36 │      46.33 │
+│     Output Token Throughput Per User │      23.09 │     11.21 │     122.91 │      34.03 │      31.52 │      22.59 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,997.85 │  2,384.00 │   3,525.00 │   3,002.00 │   3,000.00 │   3,000.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     515.28 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.17 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-16 22:14:20] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                   json_exporter.py:64
+[2025-12-16 22:14:20] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                     csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: unim
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+   Endpoint: http://localhost:8000
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8000
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8000 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6598.00 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_unim_vllm_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.17 req/s
+   Request Latency (avg): 208506.73 ms
+   Request Latency (p95): 275144.81 ms
+   Time to First Token (avg): 74294.20 ms
+   Time to First Token (p95): 134112.75 ms
+   Inter-token Latency (avg): 44.79 ms
+   Output Token Throughput: 515.28 tokens/s
+   Output Tokens (avg): 2997.85
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+🐳 Stopping container: 3bca964b1f3c
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+
+✅ Test 5/10 complete
+
+
+==============================================================================
+Test 6/10: unim/trtllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm' is not running
+
+🚀 Starting unim container with trtllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: trtllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm
+   Port: 8010
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: fb3ced36f959c233e475adc87426cc7bcd0e78897aa7cc8cb8bda1bdae8bb962
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8010
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8010/v1/health/ready
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (100s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (110s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (120s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (130s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (140s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (150s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (160s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (170s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (180s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (190s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (200s elapsed, HTTP 503)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-16 22:18:08] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-16 22:18:08] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-16 22:18:08] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-16 22:18:08] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-16 22:18:13] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8010 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                          
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                         
+[2025-12-17 00:00:42] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                    profile_data_parser.py:66
+[2025-12-17 00:00:54] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:04,  7.95requests/s]Progress:   2%|▏         | 20/1000 [00:02<02:29,  6.56requests/s]Progress:   3%|▎         | 30/1000 [00:04<02:27,  6.58requests/s]Progress:   4%|▍         | 40/1000 [00:05<02:18,  6.93requests/s]Progress:   5%|▌         | 50/1000 [00:07<02:15,  6.99requests/s]Progress:   6%|▌         | 60/1000 [00:08<02:05,  7.47requests/s]Progress:   7%|▋         | 70/1000 [00:10<02:33,  6.05requests/s]Progress:   8%|▊         | 80/1000 [00:12<02:47,  5.48requests/s]Progress:   9%|▉         | 90/1000 [00:15<02:59,  5.07requests/s]Progress:  10%|█         | 100/1000 [00:16<02:34,  5.82requests/s]Progress:  11%|█         | 110/1000 [00:17<02:25,  6.11requests/s]Progress:  12%|█▏        | 120/1000 [00:18<02:09,  6.78requests/s]Progress:  13%|█▎        | 130/1000 [00:20<02:18,  6.30requests/s]Progress:  14%|█▍        | 140/1000 [00:23<02:39,  5.39requests/s]Progress:  15%|█▌        | 150/1000 [00:25<02:43,  5.19requests/s]Progress:  16%|█▌        | 160/1000 [00:26<02:30,  5.59requests/s]Progress:  17%|█▋        | 170/1000 [00:27<02:12,  6.27requests/s]Progress:  18%|█▊        | 180/1000 [00:29<02:04,  6.60requests/s]Progress:  19%|█▉        | 190/1000 [00:30<01:55,  6.99requests/s]Progress:  20%|██        | 200/1000 [00:32<02:16,  5.87requests/s]Progress:  21%|██        | 210/1000 [00:34<02:23,  5.50requests/s]Progress:  22%|██▏       | 220/1000 [00:36<02:20,  5.55requests/s]Progress:  23%|██▎       | 230/1000 [00:37<02:03,  6.23requests/s]Progress:  24%|██▍       | 240/1000 [00:39<01:57,  6.49requests/s]Progress:  25%|██▌       | 250/1000 [00:40<01:46,  7.02requests/s]Progress:  26%|██▌       | 260/1000 [00:41<01:46,  6.96requests/s]Progress:  27%|██▋       | 270/1000 [00:43<01:44,  6.96requests/s]Progress:  28%|██▊       | 280/1000 [00:44<01:37,  7.42requests/s]Progress:  29%|██▉       | 290/1000 [00:45<01:36,  7.34requests/s]Progress:  30%|███       | 300/1000 [00:46<01:30,  7.71requests/s]Progress:  31%|███       | 310/1000 [00:48<01:31,  7.54requests/s]Progress:  32%|███▏      | 320/1000 [00:49<01:26,  7.83requests/s]Progress:  33%|███▎      | 330/1000 [00:50<01:28,  7.54requests/s]Progress:  34%|███▍      | 340/1000 [00:52<01:24,  7.83requests/s]Progress:  35%|███▌      | 350/1000 [00:53<01:25,  7.60requests/s]Progress:  36%|███▌      | 360/1000 [00:54<01:26,  7.36requests/s]Progress:  37%|███▋      | 370/1000 [00:56<01:22,  7.61requests/s]Progress:  38%|███▊      | 380/1000 [00:57<01:23,  7.45requests/s]Progress:  39%|███▉      | 390/1000 [00:58<01:19,  7.68requests/s]Progress:  40%|████      | 400/1000 [01:00<01:20,  7.47requests/s]Progress:  41%|████      | 410/1000 [01:01<01:20,  7.29requests/s]Progress:  42%|████▏     | 420/1000 [01:02<01:15,  7.66requests/s]Progress:  43%|████▎     | 430/1000 [01:03<01:12,  7.91requests/s]Progress:  44%|████▍     | 440/1000 [01:05<01:13,  7.66requests/s]Progress:  45%|████▌     | 450/1000 [01:06<01:14,  7.40requests/s]Progress:  46%|████▌     | 460/1000 [01:08<01:10,  7.67requests/s]Progress:  47%|████▋     | 470/1000 [01:09<01:10,  7.53requests/s]Progress:  48%|████▊     | 480/1000 [01:10<01:06,  7.81requests/s]Progress:  49%|████▉     | 490/1000 [01:12<01:08,  7.45requests/s]Progress:  50%|█████     | 500/1000 [01:13<01:08,  7.33requests/s]Progress:  51%|█████     | 510/1000 [01:14<01:03,  7.71requests/s]Progress:  52%|█████▏    | 520/1000 [01:16<01:03,  7.52requests/s]Progress:  53%|█████▎    | 530/1000 [01:17<01:00,  7.79requests/s]Progress:  54%|█████▍    | 540/1000 [01:18<01:01,  7.52requests/s]Progress:  55%|█████▌    | 550/1000 [01:20<01:00,  7.39requests/s]Progress:  56%|█████▌    | 560/1000 [01:21<00:57,  7.67requests/s]Progress:  57%|█████▋    | 570/1000 [01:22<00:57,  7.45requests/s]Progress:  58%|█████▊    | 580/1000 [01:23<00:54,  7.65requests/s]Progress:  59%|█████▉    | 590/1000 [01:25<00:55,  7.40requests/s]Progress:  60%|██████    | 600/1000 [01:26<00:52,  7.64requests/s]Progress:  61%|██████    | 610/1000 [01:28<00:52,  7.37requests/s]Progress:  62%|██████▏   | 620/1000 [01:29<00:52,  7.27requests/s]Progress:  63%|██████▎   | 630/1000 [01:30<00:48,  7.57requests/s]Progress:  64%|██████▍   | 640/1000 [01:32<00:48,  7.40requests/s]Progress:  65%|██████▌   | 650/1000 [01:33<00:44,  7.78requests/s]Progress:  66%|██████▌   | 660/1000 [01:34<00:45,  7.52requests/s]Progress:  67%|██████▋   | 670/1000 [01:35<00:42,  7.70requests/s]Progress:  68%|██████▊   | 680/1000 [01:37<00:43,  7.33requests/s]Progress:  69%|██████▉   | 690/1000 [01:38<00:41,  7.53requests/s]Progress:  70%|███████   | 700/1000 [01:40<00:41,  7.22requests/s]Progress:  71%|███████   | 710/1000 [01:41<00:40,  7.08requests/s]Progress:  72%|███████▏  | 720/1000 [01:42<00:37,  7.41requests/s]Progress:  73%|███████▎  | 730/1000 [01:44<00:38,  7.09requests/s]Progress:  74%|███████▍  | 740/1000 [01:45<00:34,  7.49requests/s]Progress:  75%|███████▌  | 750/1000 [01:46<00:34,  7.29requests/s]Progress:  76%|███████▌  | 760/1000 [01:48<00:31,  7.57requests/s]Progress:  77%|███████▋  | 770/1000 [01:49<00:31,  7.26requests/s]Progress:  78%|███████▊  | 780/1000 [01:50<00:28,  7.59requests/s]Progress:  79%|███████▉  | 790/1000 [01:52<00:28,  7.39requests/s]Progress:  80%|████████  | 800/1000 [01:53<00:25,  7.71requests/s]Progress:  81%|████████  | 810/1000 [01:54<00:25,  7.43requests/s]Progress:  82%|████████▏ | 820/1000 [01:56<00:23,  7.69requests/s]Progress:  83%|████████▎ | 830/1000 [01:57<00:23,  7.33requests/s]Progress:  84%|████████▍ | 840/1000 [01:59<00:22,  7.24requests/s]Progress:  85%|████████▌ | 850/1000 [02:00<00:20,  7.50requests/s]Progress:  86%|████████▌ | 860/1000 [02:01<00:19,  7.32requests/s]Progress:  87%|████████▋ | 870/1000 [02:02<00:17,  7.63requests/s]Progress:  88%|████████▊ | 880/1000 [02:04<00:16,  7.33requests/s]Progress:  89%|████████▉ | 890/1000 [02:05<00:14,  7.63requests/s]Progress:  90%|█████████ | 900/1000 [02:07<00:13,  7.34requests/s]Progress:  91%|█████████ | 910/1000 [02:08<00:12,  7.15requests/s]Progress:  92%|█████████▏| 920/1000 [02:09<00:11,  7.18requests/s]Progress:  93%|█████████▎| 930/1000 [02:11<00:10,  6.97requests/s]Progress:  94%|█████████▍| 940/1000 [02:12<00:08,  7.32requests/s]Progress:  95%|█████████▌| 950/1000 [02:14<00:07,  7.11requests/s]Progress:  96%|█████████▌| 960/1000 [02:15<00:05,  7.46requests/s]Progress:  97%|█████████▋| 970/1000 [02:16<00:04,  7.27requests/s]Progress:  98%|█████████▊| 980/1000 [02:18<00:02,  7.11requests/s]Progress:  99%|█████████▉| 990/1000 [02:19<00:01,  7.37requests/s]Progress: 100%|██████████| 1000/1000 [02:21<00:00,  7.11requests/s]Progress: 100%|██████████| 1000/1000 [02:21<00:00,  7.09requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  84,629.50 │  1,537.49 │ 142,977.92 │ 129,176.20 │ 119,359.33 │ 117,960.07 │
+│            Time To Second Token (ms) │     238.76 │      0.00 │     375.73 │     353.60 │     305.87 │     260.56 │
+│                 Request Latency (ms) │ 199,040.43 │ 33,379.39 │ 259,928.89 │ 246,217.61 │ 239,404.72 │ 238,074.50 │
+│             Inter Token Latency (ms) │      39.23 │     10.07 │      72.18 │      62.35 │      41.04 │      40.47 │
+│     Output Token Throughput Per User │      26.05 │     13.85 │      99.32 │      35.57 │      33.04 │      25.51 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,936.67 │  1,615.00 │   3,000.00 │   2,999.00 │   2,997.00 │   2,996.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     526.30 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.18 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-17 00:03:16] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                 json_exporter.py:64
+[2025-12-17 00:03:16] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                   csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: unim
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: trtllm
+   Endpoint: http://localhost:8010
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8010
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8010 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6310.15 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_trtllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_unim_trtllm_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.18 req/s
+   Request Latency (avg): 199040.43 ms
+   Request Latency (p95): 240484.16 ms
+   Time to First Token (avg): 84629.50 ms
+   Time to First Token (p95): 120544.35 ms
+   Inter-token Latency (avg): 39.23 ms
+   Output Token Throughput: 526.30 tokens/s
+   Output Tokens (avg): 2936.67
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm
+================================================================================
+
+🐳 Stopping container: fb3ced36f959
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-unim-trtllm
+
+✅ Test 6/10 complete
+
+
+==============================================================================
+Test 7/10: unim/sglang
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-sglang
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-sglang' is not running
+
+🚀 Starting unim container with sglang engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: sglang
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-sglang
+   Port: 8020
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: c2186bfa578f3fac162f7ad7a231e66a4ad50bc75ce05ee9c5874b94a1c22310
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8020
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-sglang' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-sglang -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8020/v1/health/ready
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (100s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (110s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (120s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (130s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (140s elapsed, HTTP 503)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-17 00:06:05] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-17 00:06:05] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-17 00:06:05] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-17 00:06:05] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-17 00:06:09] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8020 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                          
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                         
+[2025-12-17 02:06:29] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                    profile_data_parser.py:66
+[2025-12-17 02:06:40] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:41,  6.12requests/s]Progress:   2%|▏         | 20/1000 [00:03<02:53,  5.64requests/s]Progress:   3%|▎         | 30/1000 [00:04<02:28,  6.52requests/s]Progress:   4%|▍         | 40/1000 [00:05<02:10,  7.37requests/s]Progress:   5%|▌         | 50/1000 [00:06<01:54,  8.30requests/s]Progress:   6%|▌         | 60/1000 [00:07<01:49,  8.60requests/s]Progress:   7%|▋         | 70/1000 [00:09<01:57,  7.88requests/s]Progress:   8%|▊         | 80/1000 [00:11<02:17,  6.68requests/s]Progress:   9%|▉         | 90/1000 [00:12<02:16,  6.68requests/s]Progress:  10%|█         | 100/1000 [00:13<02:03,  7.30requests/s]Progress:  11%|█         | 110/1000 [00:14<01:49,  8.16requests/s]Progress:  12%|█▏        | 120/1000 [00:15<01:46,  8.28requests/s]Progress:  13%|█▎        | 130/1000 [00:17<01:46,  8.18requests/s]Progress:  14%|█▍        | 140/1000 [00:18<01:58,  7.26requests/s]Progress:  15%|█▌        | 150/1000 [00:20<02:12,  6.40requests/s]Progress:  16%|█▌        | 160/1000 [00:22<02:02,  6.88requests/s]Progress:  17%|█▋        | 170/1000 [00:23<01:47,  7.70requests/s]Progress:  18%|█▊        | 180/1000 [00:24<01:42,  8.03requests/s]Progress:  19%|█▉        | 190/1000 [00:25<01:35,  8.52requests/s]Progress:  20%|██        | 200/1000 [00:27<01:50,  7.27requests/s]Progress:  21%|██        | 210/1000 [00:28<01:53,  6.96requests/s]Progress:  22%|██▏       | 220/1000 [00:30<01:54,  6.80requests/s]Progress:  23%|██▎       | 230/1000 [00:31<01:45,  7.31requests/s]Progress:  24%|██▍       | 240/1000 [00:32<01:38,  7.73requests/s]Progress:  25%|██▌       | 250/1000 [00:33<01:39,  7.56requests/s]Progress:  26%|██▌       | 260/1000 [00:34<01:33,  7.90requests/s]Progress:  27%|██▋       | 270/1000 [00:36<01:35,  7.62requests/s]Progress:  28%|██▊       | 280/1000 [00:37<01:30,  7.92requests/s]Progress:  29%|██▉       | 290/1000 [00:38<01:32,  7.65requests/s]Progress:  30%|███       | 300/1000 [00:40<01:28,  7.94requests/s]Progress:  31%|███       | 310/1000 [00:41<01:29,  7.70requests/s]Progress:  32%|███▏      | 320/1000 [00:42<01:25,  7.97requests/s]Progress:  33%|███▎      | 330/1000 [00:43<01:25,  7.83requests/s]Progress:  34%|███▍      | 340/1000 [00:45<01:20,  8.15requests/s]Progress:  35%|███▌      | 350/1000 [00:46<01:13,  8.79requests/s]Progress:  36%|███▌      | 360/1000 [00:47<01:12,  8.81requests/s]Progress:  37%|███▋      | 370/1000 [00:48<01:08,  9.26requests/s]Progress:  38%|███▊      | 380/1000 [00:49<01:10,  8.85requests/s]Progress:  39%|███▉      | 390/1000 [00:50<01:09,  8.73requests/s]Progress:  40%|████      | 400/1000 [00:51<01:14,  8.09requests/s]Progress:  41%|████      | 410/1000 [00:53<01:11,  8.29requests/s]Progress:  42%|████▏     | 420/1000 [00:54<01:13,  7.84requests/s]Progress:  43%|████▎     | 430/1000 [00:55<01:10,  8.07requests/s]Progress:  44%|████▍     | 440/1000 [00:56<01:09,  8.10requests/s]Progress:  45%|████▌     | 450/1000 [00:57<01:03,  8.72requests/s]Progress:  46%|████▌     | 460/1000 [00:58<01:01,  8.76requests/s]Progress:  47%|████▋     | 470/1000 [00:59<00:56,  9.30requests/s]Progress:  48%|████▊     | 480/1000 [01:01<00:56,  9.14requests/s]Progress:  49%|████▉     | 490/1000 [01:01<00:53,  9.52requests/s]Progress:  50%|█████     | 500/1000 [01:03<00:53,  9.31requests/s]Progress:  51%|█████     | 510/1000 [01:04<00:50,  9.65requests/s]Progress:  52%|█████▏    | 520/1000 [01:05<00:50,  9.43requests/s]Progress:  53%|█████▎    | 530/1000 [01:06<00:48,  9.79requests/s]Progress:  54%|█████▍    | 540/1000 [01:07<00:45, 10.09requests/s]Progress:  55%|█████▌    | 550/1000 [01:08<00:46,  9.64requests/s]Progress:  56%|█████▌    | 560/1000 [01:09<00:46,  9.38requests/s]Progress:  57%|█████▋    | 570/1000 [01:10<00:44,  9.66requests/s]Progress:  58%|█████▊    | 580/1000 [01:11<00:44,  9.42requests/s]Progress:  59%|█████▉    | 590/1000 [01:12<00:42,  9.71requests/s]Progress:  60%|██████    | 600/1000 [01:13<00:42,  9.44requests/s]Progress:  61%|██████    | 610/1000 [01:14<00:39,  9.79requests/s]Progress:  62%|██████▏   | 620/1000 [01:15<00:40,  9.49requests/s]Progress:  63%|██████▎   | 630/1000 [01:16<00:37,  9.76requests/s]Progress:  64%|██████▍   | 640/1000 [01:17<00:38,  9.43requests/s]Progress:  65%|██████▌   | 650/1000 [01:18<00:35,  9.75requests/s]Progress:  66%|██████▌   | 660/1000 [01:19<00:36,  9.41requests/s]Progress:  67%|██████▋   | 670/1000 [01:20<00:34,  9.68requests/s]Progress:  68%|██████▊   | 680/1000 [01:21<00:34,  9.37requests/s]Progress:  69%|██████▉   | 690/1000 [01:22<00:32,  9.68requests/s]Progress:  70%|███████   | 700/1000 [01:23<00:31,  9.41requests/s]Progress:  71%|███████   | 710/1000 [01:24<00:30,  9.44requests/s]Progress:  72%|███████▏  | 720/1000 [01:26<00:32,  8.63requests/s]Progress:  73%|███████▎  | 730/1000 [01:27<00:29,  9.13requests/s]Progress:  74%|███████▍  | 740/1000 [01:28<00:28,  9.00requests/s]Progress:  75%|███████▌  | 750/1000 [01:29<00:28,  8.87requests/s]Progress:  76%|███████▌  | 760/1000 [01:30<00:25,  9.27requests/s]Progress:  77%|███████▋  | 770/1000 [01:31<00:25,  9.08requests/s]Progress:  78%|███████▊  | 780/1000 [01:32<00:23,  9.41requests/s]Progress:  79%|███████▉  | 790/1000 [01:33<00:21,  9.70requests/s]Progress:  80%|████████  | 800/1000 [01:35<00:22,  8.76requests/s]Progress:  81%|████████  | 810/1000 [01:36<00:20,  9.21requests/s]Progress:  82%|████████▏ | 820/1000 [01:37<00:20,  8.99requests/s]Progress:  83%|████████▎ | 830/1000 [01:38<00:18,  9.37requests/s]Progress:  84%|████████▍ | 840/1000 [01:39<00:17,  9.17requests/s]Progress:  85%|████████▌ | 850/1000 [01:40<00:15,  9.47requests/s]Progress:  86%|████████▌ | 860/1000 [01:41<00:15,  9.13requests/s]Progress:  87%|████████▋ | 870/1000 [01:42<00:13,  9.55requests/s]Progress:  88%|████████▊ | 880/1000 [01:43<00:12,  9.23requests/s]Progress:  89%|████████▉ | 890/1000 [01:44<00:11,  9.56requests/s]Progress:  90%|█████████ | 900/1000 [01:45<00:10,  9.28requests/s]Progress:  91%|█████████ | 910/1000 [01:46<00:09,  9.38requests/s]Progress:  92%|█████████▏| 920/1000 [01:48<00:09,  8.61requests/s]Progress:  93%|█████████▎| 930/1000 [01:49<00:07,  9.10requests/s]Progress:  94%|█████████▍| 940/1000 [01:50<00:06,  8.89requests/s]Progress:  95%|█████████▌| 950/1000 [01:51<00:05,  9.25requests/s]Progress:  96%|█████████▌| 960/1000 [01:52<00:04,  9.07requests/s]Progress:  97%|█████████▋| 970/1000 [01:53<00:03,  9.40requests/s]Progress:  98%|█████████▊| 980/1000 [01:54<00:02,  8.74requests/s]Progress:  99%|█████████▉| 990/1000 [01:55<00:01,  8.61requests/s]Progress: 100%|██████████| 1000/1000 [01:57<00:00,  7.82requests/s]Progress: 100%|██████████| 1000/1000 [01:57<00:00,  8.51requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  86,091.07 │  1,663.91 │ 179,912.56 │ 176,541.01 │ 158,788.51 │ 133,079.84 │
+│            Time To Second Token (ms) │   4,587.58 │     36.22 │  35,040.41 │  30,334.29 │  13,829.11 │   4,831.54 │
+│                 Request Latency (ms) │ 233,222.96 │ 39,369.01 │ 449,736.59 │ 318,850.10 │ 306,087.95 │ 287,648.67 │
+│             Inter Token Latency (ms) │      49.08 │     12.57 │      92.49 │      74.62 │      53.39 │      52.30 │
+│     Output Token Throughput Per User │      21.04 │     10.81 │      79.56 │      31.80 │      28.52 │      21.01 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,998.95 │  2,325.00 │   3,006.00 │   3,001.01 │   3,000.00 │   3,000.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     459.74 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.15 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-17 02:08:38] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                 json_exporter.py:64
+[2025-12-17 02:08:38] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                   csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: unim
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: sglang
+   Endpoint: http://localhost:8020
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8020
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8020 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 7355.78 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_sglang/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_unim_sglang_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.15 req/s
+   Request Latency (avg): 233222.96 ms
+   Request Latency (p95): 316769.98 ms
+   Time to First Token (avg): 86091.07 ms
+   Time to First Token (p95): 167576.26 ms
+   Inter-token Latency (avg): 49.08 ms
+   Output Token Throughput: 459.74 tokens/s
+   Output Tokens (avg): 2998.95
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-sglang
+================================================================================
+
+🐳 Stopping container: c2186bfa578f
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-unim-sglang
+
+✅ Test 7/10 complete
+
+
+==============================================================================
+Test 8/10: unim/python
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-python
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-python' is not running
+
+🚀 Starting unim container with python engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: python
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-python
+   Port: 8030
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: dcaf467465c0fc8d4bca9a07cdfc29f1180f16653b7bd6e414c278525109cd66
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8030
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-python' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-python -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:8030/v1/health/ready
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (100s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (110s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (120s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (130s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (140s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (150s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (160s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (170s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (180s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (190s elapsed, HTTP 503)
+   Service responding (HTTP 503) but may not be ready yet...
+   Still starting... (200s elapsed, HTTP 503)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-17 02:12:26] INFO     Profiling these models: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-17 02:12:26] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-17 02:12:26] INFO     Model name 'Qwen/Qwen3-30B-A3B-Thinking-2507' cannot be used to create artifact directory. Instead, 'Qwen_Qwen3-30B-A3B-Thinking-2507' will be used.                                                                perf_analyzer_config.py:157
+[2025-12-17 02:12:26] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-17 02:12:31] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen/Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:8030 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                          
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                         
+[2025-12-17 03:55:45] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                    profile_data_parser.py:66
+[2025-12-17 03:55:57] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:42,  6.09requests/s]Progress:   2%|▏         | 20/1000 [00:03<03:07,  5.24requests/s]Progress:   3%|▎         | 30/1000 [00:05<02:49,  5.71requests/s]Progress:   4%|▍         | 40/1000 [00:06<02:34,  6.23requests/s]Progress:   5%|▌         | 50/1000 [00:07<02:17,  6.93requests/s]Progress:   6%|▌         | 60/1000 [00:09<02:14,  7.01requests/s]Progress:   7%|▋         | 70/1000 [00:11<02:25,  6.40requests/s]Progress:   8%|▊         | 80/1000 [00:13<02:45,  5.56requests/s]Progress:   9%|▉         | 90/1000 [00:15<02:52,  5.26requests/s]Progress:  10%|█         | 100/1000 [00:17<02:41,  5.59requests/s]Progress:  11%|█         | 110/1000 [00:18<02:30,  5.90requests/s]Progress:  12%|█▏        | 120/1000 [00:19<02:15,  6.52requests/s]Progress:  13%|█▎        | 130/1000 [00:21<02:21,  6.15requests/s]Progress:  14%|█▍        | 140/1000 [00:23<02:32,  5.62requests/s]Progress:  15%|█▌        | 150/1000 [00:26<02:45,  5.13requests/s]Progress:  16%|█▌        | 160/1000 [00:27<02:26,  5.74requests/s]Progress:  17%|█▋        | 170/1000 [00:28<02:17,  6.04requests/s]Progress:  18%|█▊        | 180/1000 [00:29<02:04,  6.59requests/s]Progress:  19%|█▉        | 190/1000 [00:31<02:05,  6.48requests/s]Progress:  20%|██        | 200/1000 [00:33<02:21,  5.65requests/s]Progress:  21%|██        | 210/1000 [00:35<02:26,  5.38requests/s]Progress:  22%|██▏       | 220/1000 [00:37<02:23,  5.42requests/s]Progress:  23%|██▎       | 230/1000 [00:38<02:06,  6.09requests/s]Progress:  24%|██▍       | 240/1000 [00:40<01:59,  6.38requests/s]Progress:  25%|██▌       | 250/1000 [00:41<01:48,  6.92requests/s]Progress:  26%|██▌       | 260/1000 [00:42<01:45,  6.99requests/s]Progress:  27%|██▋       | 270/1000 [00:43<01:39,  7.37requests/s]Progress:  28%|██▊       | 280/1000 [00:45<01:39,  7.26requests/s]Progress:  29%|██▉       | 290/1000 [00:46<01:33,  7.56requests/s]Progress:  30%|███       | 300/1000 [00:48<01:35,  7.34requests/s]Progress:  31%|███       | 310/1000 [00:49<01:35,  7.20requests/s]Progress:  32%|███▏      | 320/1000 [00:50<01:31,  7.42requests/s]Progress:  33%|███▎      | 330/1000 [00:52<01:33,  7.15requests/s]Progress:  34%|███▍      | 340/1000 [00:53<01:30,  7.29requests/s]Progress:  35%|███▌      | 350/1000 [00:55<01:29,  7.24requests/s]Progress:  36%|███▌      | 360/1000 [00:56<01:24,  7.61requests/s]Progress:  37%|███▋      | 370/1000 [00:57<01:24,  7.44requests/s]Progress:  38%|███▊      | 380/1000 [00:59<01:25,  7.23requests/s]Progress:  39%|███▉      | 390/1000 [01:00<01:21,  7.52requests/s]Progress:  40%|████      | 400/1000 [01:01<01:22,  7.31requests/s]Progress:  41%|████      | 410/1000 [01:02<01:17,  7.58requests/s]Progress:  42%|████▏     | 420/1000 [01:04<01:18,  7.38requests/s]Progress:  43%|████▎     | 430/1000 [01:05<01:19,  7.19requests/s]Progress:  44%|████▍     | 440/1000 [01:06<01:13,  7.59requests/s]Progress:  45%|████▌     | 450/1000 [01:08<01:14,  7.35requests/s]Progress:  46%|████▌     | 460/1000 [01:09<01:11,  7.60requests/s]Progress:  47%|████▋     | 470/1000 [01:11<01:12,  7.34requests/s]Progress:  48%|████▊     | 480/1000 [01:12<01:08,  7.58requests/s]Progress:  49%|████▉     | 490/1000 [01:13<01:09,  7.38requests/s]Progress:  50%|█████     | 500/1000 [01:15<01:05,  7.59requests/s]Progress:  51%|█████     | 510/1000 [01:16<01:07,  7.26requests/s]Progress:  52%|█████▏    | 520/1000 [01:17<01:06,  7.22requests/s]Progress:  53%|█████▎    | 530/1000 [01:19<01:02,  7.53requests/s]Progress:  54%|█████▍    | 540/1000 [01:20<01:02,  7.31requests/s]Progress:  55%|█████▌    | 550/1000 [01:21<00:59,  7.62requests/s]Progress:  56%|█████▌    | 560/1000 [01:23<00:59,  7.35requests/s]Progress:  57%|█████▋    | 570/1000 [01:24<00:56,  7.60requests/s]Progress:  58%|█████▊    | 580/1000 [01:25<00:57,  7.33requests/s]Progress:  59%|█████▉    | 590/1000 [01:27<00:53,  7.67requests/s]Progress:  60%|██████    | 600/1000 [01:28<00:54,  7.35requests/s]Progress:  61%|██████    | 610/1000 [01:29<00:51,  7.59requests/s]Progress:  62%|██████▏   | 620/1000 [01:31<00:51,  7.42requests/s]Progress:  63%|██████▎   | 630/1000 [01:32<00:50,  7.27requests/s]Progress:  64%|██████▍   | 640/1000 [01:33<00:48,  7.47requests/s]Progress:  65%|██████▌   | 650/1000 [01:35<00:48,  7.23requests/s]Progress:  66%|██████▌   | 660/1000 [01:36<00:45,  7.49requests/s]Progress:  67%|██████▋   | 670/1000 [01:38<00:45,  7.24requests/s]Progress:  68%|██████▊   | 680/1000 [01:39<00:42,  7.46requests/s]Progress:  69%|██████▉   | 690/1000 [01:40<00:43,  7.12requests/s]Progress:  70%|███████   | 700/1000 [01:42<00:40,  7.36requests/s]Progress:  71%|███████   | 710/1000 [01:43<00:40,  7.18requests/s]Progress:  72%|███████▏  | 720/1000 [01:44<00:37,  7.47requests/s]Progress:  73%|███████▎  | 730/1000 [01:46<00:37,  7.24requests/s]Progress:  74%|███████▍  | 740/1000 [01:47<00:34,  7.48requests/s]Progress:  75%|███████▌  | 750/1000 [01:49<00:34,  7.26requests/s]Progress:  76%|███████▌  | 760/1000 [01:50<00:33,  7.08requests/s]Progress:  77%|███████▋  | 770/1000 [01:51<00:31,  7.35requests/s]Progress:  78%|███████▊  | 780/1000 [01:53<00:30,  7.21requests/s]Progress:  79%|███████▉  | 790/1000 [01:54<00:28,  7.35requests/s]Progress:  80%|████████  | 800/1000 [01:56<00:28,  7.13requests/s]Progress:  81%|████████  | 810/1000 [01:57<00:25,  7.42requests/s]Progress:  82%|████████▏ | 820/1000 [01:58<00:25,  7.18requests/s]Progress:  83%|████████▎ | 830/1000 [02:00<00:24,  6.96requests/s]Progress:  84%|████████▍ | 840/1000 [02:01<00:21,  7.27requests/s]Progress:  85%|████████▌ | 850/1000 [02:03<00:21,  7.08requests/s]Progress:  86%|████████▌ | 860/1000 [02:04<00:19,  7.33requests/s]Progress:  87%|████████▋ | 870/1000 [02:05<00:18,  7.08requests/s]Progress:  88%|████████▊ | 880/1000 [02:07<00:16,  7.33requests/s]Progress:  89%|████████▉ | 890/1000 [02:08<00:15,  6.98requests/s]Progress:  90%|█████████ | 900/1000 [02:10<00:14,  6.89requests/s]Progress:  91%|█████████ | 910/1000 [02:11<00:12,  7.15requests/s]Progress:  92%|█████████▏| 920/1000 [02:12<00:11,  6.86requests/s]Progress:  93%|█████████▎| 930/1000 [02:14<00:09,  7.21requests/s]Progress:  94%|█████████▍| 940/1000 [02:15<00:08,  7.02requests/s]Progress:  95%|█████████▌| 950/1000 [02:16<00:06,  7.33requests/s]Progress:  96%|█████████▌| 960/1000 [02:18<00:05,  7.05requests/s]Progress:  97%|█████████▋| 970/1000 [02:19<00:04,  7.31requests/s]Progress:  98%|█████████▊| 980/1000 [02:21<00:02,  7.12requests/s]Progress:  99%|█████████▉| 990/1000 [02:22<00:01,  6.96requests/s]Progress: 100%|██████████| 1000/1000 [02:23<00:00,  7.26requests/s]Progress: 100%|██████████| 1000/1000 [02:23<00:00,  6.95requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                           
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃       min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  84,988.13 │  1,457.97 │ 148,598.28 │ 134,873.53 │ 119,408.90 │ 118,273.06 │
+│            Time To Second Token (ms) │     236.78 │     19.40 │     367.28 │     354.86 │     303.96 │     260.00 │
+│                 Request Latency (ms) │ 200,046.18 │ 26,183.84 │ 273,358.64 │ 259,660.56 │ 240,015.11 │ 238,521.25 │
+│             Inter Token Latency (ms) │      39.54 │      8.19 │      68.93 │      63.13 │      41.67 │      40.55 │
+│     Output Token Throughput Per User │      25.84 │     14.51 │     122.11 │      34.76 │      32.92 │      25.35 │
+│                    (tokens/sec/user) │            │           │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,931.95 │  1,695.00 │   3,000.00 │   2,998.01 │   2,997.00 │   2,996.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │ 30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     523.30 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.18 │       N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │       N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴───────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-17 03:58:22] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                 json_exporter.py:64
+[2025-12-17 03:58:22] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                   csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: unim
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: python
+   Endpoint: http://localhost:8030
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:8030
+   ✅ Endpoint is accessible
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen/Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:8030 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6358.53 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_unim_python/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_unim_python_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.18 req/s
+   Request Latency (avg): 200046.18 ms
+   Request Latency (p95): 240982.32 ms
+   Time to First Token (avg): 84988.13 ms
+   Time to First Token (p95): 121662.85 ms
+   Inter-token Latency (avg): 39.54 ms
+   Output Token Throughput: 523.30 tokens/s
+   Output Tokens (avg): 2931.95
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-python
+================================================================================
+
+🐳 Stopping container: dcaf467465c0
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-unim-python
+
+✅ Test 8/10 complete
+
+
+==============================================================================
+Test 9/10: triton/vllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-triton-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-triton-vllm' is not running
+
+🚀 Starting triton container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/triton
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-triton-vllm
+   Port: 9000
+   GPU memory: 0.95
+
+📦 Setting up Triton model repository...
+   ✅ Created config.pbtxt for vllm backend
+   Creating model.json for vLLM backend...
+   ✅ Created model.json
+
+✅ Container started successfully!
+   Container ID: 40ca5b812a5327f51a7fe4358ffbbd01f95a81c6861d78f5e2a5feb4eb8dec21
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:9000
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-triton-vllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-triton-vllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:9000/v1/models
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+✅ Service is ready!
+
+📊 Running benchmark...
+[2025-12-17 04:00:51] INFO     Profiling these models: Qwen_Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                    create_config.py:58
+[2025-12-17 04:00:51] WARNING  Skipping unreachable metrics URL: http://localhost:9400/metrics                                                                                                                                                               subcommand.py:223
+[2025-12-17 04:00:51] INFO     Creating tokenizer for: Qwen/Qwen3-30B-A3B-Thinking-2507                                                                                                                                                                      subcommand.py:190
+[2025-12-17 04:00:56] INFO     Running Perf Analyzer : 'perf_analyzer -m Qwen_Qwen3-30B-A3B-Thinking-2507 --async --warmup-request-count 100 --stability-percentage 999 --request-count 1000 -i http -u http://localhost:9000 --concurrency-range 40          subcommand.py:98
+                               --service-kind openai --endpoint v1/chat/completions --input-data artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/inputs.json --profile-export-file                          
+                               artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                                                                         
+[2025-12-17 05:52:52] INFO     Loading response data from 'artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export.json'                                                    profile_data_parser.py:66
+[2025-12-17 05:53:05] INFO     Parsing total 1000 requests.                                                                                                                                                                                     llm_profile_data_parser.py:124
+Progress:   0%|          | 0/1000 [00:00<?, ?requests/s]Progress:   1%|          | 10/1000 [00:01<02:36,  6.33requests/s]Progress:   2%|▏         | 20/1000 [00:03<02:29,  6.57requests/s]Progress:   3%|▎         | 30/1000 [00:04<02:28,  6.53requests/s]Progress:   4%|▍         | 40/1000 [00:05<02:18,  6.91requests/s]Progress:   5%|▌         | 50/1000 [00:07<02:05,  7.59requests/s]Progress:   6%|▌         | 60/1000 [00:08<02:03,  7.60requests/s]Progress:   7%|▋         | 70/1000 [00:10<02:24,  6.45requests/s]Progress:   8%|▊         | 80/1000 [00:12<02:36,  5.86requests/s]Progress:   9%|▉         | 90/1000 [00:14<02:46,  5.45requests/s]Progress:  10%|█         | 100/1000 [00:15<02:28,  6.04requests/s]Progress:  11%|█         | 110/1000 [00:17<02:22,  6.23requests/s]Progress:  12%|█▏        | 120/1000 [00:18<02:08,  6.86requests/s]Progress:  13%|█▎        | 130/1000 [00:20<02:14,  6.45requests/s]Progress:  14%|█▍        | 140/1000 [00:22<02:26,  5.87requests/s]Progress:  15%|█▌        | 150/1000 [00:24<02:41,  5.28requests/s]Progress:  16%|█▌        | 160/1000 [00:26<02:28,  5.66requests/s]Progress:  17%|█▋        | 170/1000 [00:27<02:09,  6.40requests/s]Progress:  18%|█▊        | 180/1000 [00:28<02:02,  6.69requests/s]Progress:  19%|█▉        | 190/1000 [00:29<01:54,  7.09requests/s]Progress:  20%|██        | 200/1000 [00:32<02:16,  5.87requests/s]Progress:  21%|██        | 210/1000 [00:34<02:23,  5.49requests/s]Progress:  22%|██▏       | 220/1000 [00:35<02:20,  5.55requests/s]Progress:  23%|██▎       | 230/1000 [00:37<02:08,  5.99requests/s]Progress:  24%|██▍       | 240/1000 [00:38<01:53,  6.68requests/s]Progress:  25%|██▌       | 250/1000 [00:39<01:49,  6.88requests/s]Progress:  26%|██▌       | 260/1000 [00:40<01:40,  7.35requests/s]Progress:  27%|██▋       | 270/1000 [00:42<01:39,  7.32requests/s]Progress:  28%|██▊       | 280/1000 [00:43<01:33,  7.69requests/s]Progress:  29%|██▉       | 290/1000 [00:44<01:33,  7.57requests/s]Progress:  30%|███       | 300/1000 [00:45<01:28,  7.94requests/s]Progress:  31%|███       | 310/1000 [00:47<01:29,  7.72requests/s]Progress:  32%|███▏      | 320/1000 [00:48<01:24,  8.05requests/s]Progress:  33%|███▎      | 330/1000 [00:49<01:25,  7.82requests/s]Progress:  34%|███▍      | 340/1000 [00:51<01:26,  7.59requests/s]Progress:  35%|███▌      | 350/1000 [00:52<01:22,  7.84requests/s]Progress:  36%|███▌      | 360/1000 [00:53<01:23,  7.70requests/s]Progress:  37%|███▋      | 370/1000 [00:54<01:18,  8.01requests/s]Progress:  38%|███▊      | 380/1000 [00:56<01:20,  7.67requests/s]Progress:  39%|███▉      | 390/1000 [00:57<01:17,  7.83requests/s]Progress:  40%|████      | 400/1000 [00:58<01:20,  7.50requests/s]Progress:  41%|████      | 410/1000 [01:00<01:15,  7.86requests/s]Progress:  42%|████▏     | 420/1000 [01:01<01:16,  7.61requests/s]Progress:  43%|████▎     | 430/1000 [01:02<01:12,  7.90requests/s]Progress:  44%|████▍     | 440/1000 [01:04<01:13,  7.62requests/s]Progress:  45%|████▌     | 450/1000 [01:05<01:13,  7.50requests/s]Progress:  46%|████▌     | 460/1000 [01:06<01:09,  7.74requests/s]Progress:  47%|████▋     | 470/1000 [01:08<01:10,  7.48requests/s]Progress:  48%|████▊     | 480/1000 [01:09<01:06,  7.81requests/s]Progress:  49%|████▉     | 490/1000 [01:10<01:06,  7.62requests/s]Progress:  50%|█████     | 500/1000 [01:11<01:06,  7.50requests/s]Progress:  51%|█████     | 510/1000 [01:13<01:03,  7.75requests/s]Progress:  52%|█████▏    | 520/1000 [01:14<01:07,  7.06requests/s]Progress:  53%|█████▎    | 530/1000 [01:15<01:02,  7.49requests/s]Progress:  54%|█████▍    | 540/1000 [01:17<01:01,  7.43requests/s]Progress:  55%|█████▌    | 550/1000 [01:18<00:58,  7.75requests/s]Progress:  56%|█████▌    | 560/1000 [01:19<00:58,  7.53requests/s]Progress:  57%|█████▋    | 570/1000 [01:21<00:55,  7.77requests/s]Progress:  58%|█████▊    | 580/1000 [01:22<00:55,  7.51requests/s]Progress:  59%|█████▉    | 590/1000 [01:23<00:52,  7.85requests/s]Progress:  60%|██████    | 600/1000 [01:25<00:52,  7.63requests/s]Progress:  61%|██████    | 610/1000 [01:26<00:51,  7.50requests/s]Progress:  62%|██████▏   | 620/1000 [01:27<00:48,  7.83requests/s]Progress:  63%|██████▎   | 630/1000 [01:29<00:49,  7.54requests/s]Progress:  64%|██████▍   | 640/1000 [01:30<00:45,  7.85requests/s]Progress:  65%|██████▌   | 650/1000 [01:31<00:46,  7.50requests/s]Progress:  66%|██████▌   | 660/1000 [01:32<00:43,  7.74requests/s]Progress:  67%|██████▋   | 670/1000 [01:34<00:43,  7.51requests/s]Progress:  68%|██████▊   | 680/1000 [01:35<00:43,  7.36requests/s]Progress:  69%|██████▉   | 690/1000 [01:36<00:40,  7.62requests/s]Progress:  70%|███████   | 700/1000 [01:38<00:40,  7.45requests/s]Progress:  71%|███████   | 710/1000 [01:39<00:37,  7.65requests/s]Progress:  72%|███████▏  | 720/1000 [01:41<00:37,  7.38requests/s]Progress:  73%|███████▎  | 730/1000 [01:42<00:35,  7.68requests/s]Progress:  74%|███████▍  | 740/1000 [01:43<00:35,  7.40requests/s]Progress:  75%|███████▌  | 750/1000 [01:44<00:32,  7.69requests/s]Progress:  76%|███████▌  | 760/1000 [01:46<00:32,  7.44requests/s]Progress:  77%|███████▋  | 770/1000 [01:47<00:29,  7.75requests/s]Progress:  78%|███████▊  | 780/1000 [01:48<00:29,  7.50requests/s]Progress:  79%|███████▉  | 790/1000 [01:50<00:28,  7.35requests/s]Progress:  80%|████████  | 800/1000 [01:51<00:26,  7.67requests/s]Progress:  81%|████████  | 810/1000 [01:52<00:25,  7.50requests/s]Progress:  82%|████████▏ | 820/1000 [01:54<00:23,  7.78requests/s]Progress:  83%|████████▎ | 830/1000 [01:55<00:22,  7.47requests/s]Progress:  84%|████████▍ | 840/1000 [01:56<00:20,  7.78requests/s]Progress:  85%|████████▌ | 850/1000 [01:58<00:19,  7.56requests/s]Progress:  86%|████████▌ | 860/1000 [01:59<00:17,  7.79requests/s]Progress:  87%|████████▋ | 870/1000 [02:00<00:17,  7.52requests/s]Progress:  88%|████████▊ | 880/1000 [02:01<00:15,  7.76requests/s]Progress:  89%|████████▉ | 890/1000 [02:03<00:14,  7.43requests/s]Progress:  90%|█████████ | 900/1000 [02:04<00:12,  7.74requests/s]Progress:  91%|█████████ | 910/1000 [02:06<00:12,  7.44requests/s]Progress:  92%|█████████▏| 920/1000 [02:07<00:11,  7.22requests/s]Progress:  93%|█████████▎| 930/1000 [02:08<00:09,  7.59requests/s]Progress:  94%|█████████▍| 940/1000 [02:10<00:08,  7.42requests/s]Progress:  95%|█████████▌| 950/1000 [02:11<00:06,  7.77requests/s]Progress:  96%|█████████▌| 960/1000 [02:12<00:05,  7.50requests/s]Progress:  97%|█████████▋| 970/1000 [02:13<00:03,  7.76requests/s]Progress:  98%|█████████▊| 980/1000 [02:15<00:02,  7.46requests/s]Progress:  99%|█████████▉| 990/1000 [02:16<00:01,  7.74requests/s]Progress: 100%|██████████| 1000/1000 [02:17<00:00,  7.50requests/s]Progress: 100%|██████████| 1000/1000 [02:17<00:00,  7.25requests/s]
+                                           NVIDIA GenAI-Perf | LLM Metrics                                            
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃                            Statistic ┃        avg ┃        min ┃        max ┃        p99 ┃        p90 ┃        p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│             Time To First Token (ms) │  60,660.79 │   1,595.14 │ 178,443.09 │ 162,523.83 │ 143,322.46 │ 136,958.94 │
+│            Time To Second Token (ms) │     321.20 │      32.60 │     714.16 │     421.83 │     387.05 │     363.97 │
+│                 Request Latency (ms) │ 212,577.25 │ 105,158.23 │ 327,585.34 │ 318,033.66 │ 297,225.79 │ 289,071.89 │
+│             Inter Token Latency (ms) │      50.67 │      33.91 │      97.47 │      80.82 │      54.58 │      52.00 │
+│     Output Token Throughput Per User │      20.08 │      10.26 │      29.49 │      25.91 │      24.44 │      20.45 │
+│                    (tokens/sec/user) │            │            │            │            │            │            │
+│      Output Sequence Length (tokens) │   2,999.36 │   2,575.00 │   3,005.00 │   3,001.00 │   3,000.00 │   3,000.00 │
+│       Input Sequence Length (tokens) │  30,000.15 │  30,000.00 │  30,002.00 │  30,002.00 │  30,001.00 │  30,000.00 │
+│ Output Token Throughput (tokens/sec) │     491.40 │        N/A │        N/A │        N/A │        N/A │        N/A │
+│         Request Throughput (per sec) │       0.16 │        N/A │        N/A │        N/A │        N/A │        N/A │
+│                Request Count (count) │   1,000.00 │        N/A │        N/A │        N/A │        N/A │        N/A │
+└──────────────────────────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
+[2025-12-17 05:55:24] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json                                                                 json_exporter.py:64
+[2025-12-17 05:55:24] INFO     Generating artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.csv                                                                   csv_exporter.py:75
+================================================================================
+🚀 Running GenAI-Perf Benchmark
+================================================================================
+
+📝 Configuration:
+   Method: triton
+   Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+   Endpoint: http://localhost:9000
+   Concurrency: 40
+   Request count: 1000
+   Streaming: True
+   Input: Synthetic (30000 tokens)
+   Output: 3000 tokens
+   ✅ Using local genai-perf
+
+🔍 Checking endpoint: http://localhost:9000
+   ⚠️  Warning: Endpoint may not be ready (HTTP 404)
+   Continuing anyway...
+
+⚙️  Running benchmark...
+   Command: genai-perf profile --random-seed 42 --warmup-request-count 100 -m Qwen_Qwen3-30B-A3B-Thinking-2507 --endpoint-type chat -u http://localhost:9000 --concurrency 40 --artifact-dir artifacts/Qwen_Qwen3-30...
+
+
+✅ Benchmark completed in 6875.53 seconds
+
+📊 Parsing performance metrics...
+   Found profile: /localhome/local-tranminhq/dockers/artifacts/Qwen_Qwen3-30B-A3B-Thinking-2507_triton_vllm/Qwen_Qwen3-30B-A3B-Thinking-2507-openai-chat-concurrency40/profile_export_genai_perf.json
+
+💾 Exporting metrics to: artifacts/benchmark_qwen-qwen3-30b-a3b-thinking-2507_triton_vllm_20251216_150021.csv
+   ✅ Metrics exported successfully
+
+📊 Performance Summary:
+   Request Throughput: 0.16 req/s
+   Request Latency (avg): 212577.25 ms
+   Request Latency (p95): 300400.16 ms
+   Time to First Token (avg): 60660.79 ms
+   Time to First Token (p95): 145867.42 ms
+   Inter-token Latency (avg): 50.67 ms
+   Output Token Throughput: 491.40 tokens/s
+   Output Tokens (avg): 2999.36
+   Input Tokens (avg): 30000.15
+
+✅ Done!
+
+✅ Benchmark completed
+
+🛑 Stopping container...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-triton-vllm
+================================================================================
+
+🐳 Stopping container: 40ca5b812a53
+✅ Container stopped successfully!
+
+qwen-qwen3-30b-a3b-thinking-2507-triton-vllm
+
+✅ Test 9/10 complete
+
+
+==============================================================================
+Test 10/10: triton/trtllm
+==============================================================================
+
+🧹 Cleaning up...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm' is not running
+
+🚀 Starting triton container with trtllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: trtllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/triton
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm
+   Port: 9010
+   GPU memory: 0.95
+
+📦 Setting up Triton model repository...
+   ✅ Created config.pbtxt for trtllm backend
+   ⚠️  TRT-LLM backend requires pre-built engines
+   Place engines in: /localhome/local-tranminhq/dockers/.cache/triton/model_repository/Qwen_Qwen3-30B-A3B-Thinking-2507/1
+
+✅ Container started successfully!
+   Container ID: ef6cb3d81ffd831529f18351e2e175f51fc8bac9a68ef6dd6a48f67b05f8dfa5
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:9010
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm -f' to watch logs
+
+⏳ Waiting for service to be ready...
+   Checking: http://localhost:9010/v1/models
+   Still starting... (0s elapsed, HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+   Still starting... (130s elapsed, HTTP 000)
+   Still starting... (140s elapsed, HTTP 000)
+   Still starting... (150s elapsed, HTTP 000)
+   Still starting... (160s elapsed, HTTP 000)
+   Still starting... (170s elapsed, HTTP 000)
+   Still starting... (180s elapsed, HTTP 000)
+   Still starting... (190s elapsed, HTTP 000)
+   Still starting... (200s elapsed, HTTP 000)
+   Still starting... (210s elapsed, HTTP 000)
+   Still starting... (220s elapsed, HTTP 000)
+   Still starting... (230s elapsed, HTTP 000)
+   Still starting... (240s elapsed, HTTP 000)
+   Still starting... (250s elapsed, HTTP 000)
+   Still starting... (260s elapsed, HTTP 000)
+   Still starting... (270s elapsed, HTTP 000)
+   Still starting... (280s elapsed, HTTP 000)
+   Still starting... (290s elapsed, HTTP 000)
+   Still starting... (300s elapsed, HTTP 000)
+   Still starting... (310s elapsed, HTTP 000)
+   Still starting... (320s elapsed, HTTP 000)
+   Still starting... (330s elapsed, HTTP 000)
+   Still starting... (340s elapsed, HTTP 000)
+   Still starting... (350s elapsed, HTTP 000)
+   Still starting... (360s elapsed, HTTP 000)
+   Still starting... (370s elapsed, HTTP 000)
+   Still starting... (380s elapsed, HTTP 000)
+   Still starting... (390s elapsed, HTTP 000)
+   Still starting... (400s elapsed, HTTP 000)
+   Still starting... (410s elapsed, HTTP 000)
+   Still starting... (420s elapsed, HTTP 000)
+   Still starting... (430s elapsed, HTTP 000)
+   Still starting... (440s elapsed, HTTP 000)
+   Still starting... (450s elapsed, HTTP 000)
+   Still starting... (460s elapsed, HTTP 000)
+   Still starting... (470s elapsed, HTTP 000)
+   Still starting... (480s elapsed, HTTP 000)
+   Still starting... (490s elapsed, HTTP 000)
+   Still starting... (500s elapsed, HTTP 000)
+   Still starting... (510s elapsed, HTTP 000)
+   Still starting... (520s elapsed, HTTP 000)
+   Still starting... (530s elapsed, HTTP 000)
+   Still starting... (540s elapsed, HTTP 000)
+   Still starting... (550s elapsed, HTTP 000)
+   Still starting... (560s elapsed, HTTP 000)
+   Still starting... (570s elapsed, HTTP 000)
+   Still starting... (580s elapsed, HTTP 000)
+   Still starting... (590s elapsed, HTTP 000)
+❌ Timeout waiting for service
+================================================================================
+📋 Container Logs: qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm
+================================================================================
+
+❌ Container 'qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm' is not running
+
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-triton-trtllm' is not running
+
+
+==============================================================================
+🎉 Benchmark Suite Complete!
+==============================================================================
+
+📊 Summary:
+   Total tests: 10
+   Successful: 8
+   Failed: 2
+
+✅ Successful benchmarks:
+   - hf/vllm
+   - hf/trtllm
+   - hf/sglang
+   - unim/vllm
+   - unim/trtllm
+   - unim/sglang
+   - unim/python
+   - triton/vllm
+
+Results saved in: artifacts/
+
+❌ Failed tests:
+   - nim/vllm: Container start failed
+   - triton/trtllm: Service timeout
+
+Key metrics to analyze:
+   - Time to First Token (TTFT)
+   - Inter-Token Latency (ITL)
+   - Request Latency
+   - Throughput (tokens/sec)
+
+Example analysis:
+   import pandas as pd
+   df = pd.read_csv('artifacts/benchmark_*.csv')
+   df.groupby(['method', 'engine'])[['request_throughput_avg', 'ttft_avg']].mean()
+
+✅ Done!
+
