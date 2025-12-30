@@ -1,51 +1,51 @@
 # Core dependencies for HuggingFace Model Deployment and Benchmarking
 
-# GenAI Performance Testing
-genai-perf>=0.0.1
+# # GenAI Performance Testing
+# genai-perf>=0.0.1
 
-# Triton Client (required for genai-perf)
-tritonclient[all]>=2.40.0
+# # Triton Client (required for genai-perf)
+# tritonclient[all]>=2.40.0
 
-# Docker Python SDK
-docker>=6.0.0
+# # Docker Python SDK
+# docker>=6.0.0
 
-# HuggingFace libraries
-transformers>=4.36.0
-tokenizers>=0.15.0
-huggingface-hub>=0.20.0
+# # HuggingFace libraries
+# transformers>=4.36.0
+# tokenizers>=0.15.0
+# huggingface-hub>=0.20.0
 
-# Performance monitoring
-psutil>=5.9.0
-gpustat>=1.1.0
+# # Performance monitoring
+# psutil>=5.9.0
+# gpustat>=1.1.0
 
-# Data processing
-pandas>=2.0.0
-numpy>=1.24.0
+# # Data processing
+# pandas>=2.0.0
+# numpy>=1.24.0
 
-# API clients
-requests>=2.31.0
-openai>=1.0.0
+# # API clients
+# requests>=2.31.0
+# openai>=1.0.0
 
-# Utilities
-tqdm>=4.65.0
-rich>=13.0.0
-sentence-transformers>=5.2.0
+# # Utilities
+# tqdm>=4.65.0
+# rich>=13.0.0
+# sentence-transformers>=5.2.0
 
-vllm>=0.2.0
-sglang>=0.1.0
-torch>=2.1.0
-accelerate>=0.25.0
+# vllm>=0.2.0
+# sglang>=0.1.0
+# torch>=2.1.0
+# accelerate>=0.25.0
 
-datasets                      # HuggingFace datasets for Nemotron data
-requests==2.32.5              # HTTP requests for NIM API
-numpy==2.3.5                  # Numerical operations
-tqdm==4.67.1                  # Progress bars
-transformers==4.57.3          # HuggingFace transformers (required by sentence-transformers)
+# datasets                      # HuggingFace datasets for Nemotron data
+# requests==2.32.5              # HTTP requests for NIM API
+# numpy==2.3.5                  # Numerical operations
+# tqdm==4.67.1                  # Progress bars
+# transformers==4.57.3          # HuggingFace transformers (required by sentence-transformers)
 
-# WEB & UTILITIES (Required for scraping/formatting)
-beautifulsoup4                # HTML parsing (bs4)
-rich==14.2.0                  # Beautiful terminal output
-huggingface-hub==0.36.0       # HuggingFace Hub utilities
+# # WEB & UTILITIES (Required for scraping/formatting)
+# beautifulsoup4                # HTML parsing (bs4)
+# rich==14.2.0                  # Beautiful terminal output
+# huggingface-hub==0.36.0       # HuggingFace Hub utilities
 
 
 
