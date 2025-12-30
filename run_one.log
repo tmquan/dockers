@@ -2385,3 +2385,319 @@ qwen-qwen3-30b-a3b-thinking-2507-triton-vllm
 
 ✅ Done!
 
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+==============================================================================
+Single Test Benchmark
+==============================================================================
+
+Configuration:
+  Method: hf
+  Engine: python
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Container: qwen-qwen3-30b-a3b-thinking-2507-hf-python
+  Port: 8000
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+
+📋 Checking prerequisites...
+✅ genai-perf found locally
+✅ Prerequisites check passed
+
+🧹 Cleaning up existing containers...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-hf-python
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-hf-python' is not running
+
+   ✅ Cleanup complete
+
+🚀 Starting hf container with python engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+
+❌ Error: Engine 'python' not supported for hf method
+   Supported engines: vllm, trtllm, sglang
+
+❌ Failed to start container
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+==============================================================================
+Single Test Benchmark
+==============================================================================
+
+Configuration:
+  Method: unim
+  Engine: vllm
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+  Port: 8000
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+
+📋 Checking prerequisites...
+✅ genai-perf found locally
+✅ Prerequisites check passed
+
+🧹 Cleaning up existing containers...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' is not running
+
+qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   ✅ Cleanup complete
+
+🚀 Starting unim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+❌ Failed to start container!
+   Error: Unable to find image 'nvcr.io/nim/nvidia/llm-nim:1.15.2' locally
+docker: Error response from daemon: unknown: failed to resolve reference "nvcr.io/nim/nvidia/llm-nim:1.15.2": unexpected status from HEAD request to https://nvcr.io/v2/nim/nvidia/llm-nim/manifests/1.15.2: 401 Unauthorized
+
+Run 'docker run --help' for more information
+
+
+❌ Failed to start container
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+==============================================================================
+Single Test Benchmark
+==============================================================================
+
+Configuration:
+  Method: unim
+  Engine: vllm
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+  Port: 8000
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+
+📋 Checking prerequisites...
+✅ genai-perf found locally
+✅ Prerequisites check passed
+
+🧹 Cleaning up existing containers...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' is not running
+
+   ✅ Cleanup complete
+
+🚀 Starting unim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+❌ Failed to start container!
+   Error: Unable to find image 'nvcr.io/nim/nvidia/llm-nim:1.15.2' locally
+docker: Error response from daemon: unknown: failed to resolve reference "nvcr.io/nim/nvidia/llm-nim:1.15.2": unexpected status from HEAD request to https://nvcr.io/v2/nim/nvidia/llm-nim/manifests/1.15.2: 401 Unauthorized
+
+Run 'docker run --help' for more information
+
+
+❌ Failed to start container
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+==============================================================================
+Single Test Benchmark
+==============================================================================
+
+Configuration:
+  Method: unim
+  Engine: vllm
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+  Port: 8000
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+
+📋 Checking prerequisites...
+✅ genai-perf found locally
+✅ Prerequisites check passed
+
+🧹 Cleaning up existing containers...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' is not running
+
+   ✅ Cleanup complete
+
+🚀 Starting unim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+❌ Failed to start container!
+   Error: Unable to find image 'nvcr.io/nim/nvidia/llm-nim:latest' locally
+docker: Error response from daemon: unknown: failed to resolve reference "nvcr.io/nim/nvidia/llm-nim:latest": unexpected status from HEAD request to https://nvcr.io/v2/nim/nvidia/llm-nim/manifests/latest: 401 Unauthorized
+
+Run 'docker run --help' for more information
+
+
+❌ Failed to start container
+==============================================================================
+Logging to: run_one.log
+==============================================================================
+
+==============================================================================
+Single Test Benchmark
+==============================================================================
+
+Configuration:
+  Method: unim
+  Engine: vllm
+  Model: Qwen/Qwen3-30B-A3B-Thinking-2507
+  Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+  Port: 8000
+  Input: SYNTHETIC (30000 tokens)
+  Output: 3000 tokens
+  Concurrency: 40
+  Request Count: 1000
+
+📋 Checking prerequisites...
+⚠️  genai-perf not found locally. Will use Docker image.
+✅ Prerequisites check passed
+
+⚠️  Warning: HF_TOKEN not set. This may be required for private models.
+   Set it with: export HF_TOKEN=your_token_here
+Continue anyway? (y/n) 
+🧹 Cleaning up existing containers...
+================================================================================
+🛑 Stopping Container: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+================================================================================
+
+⚠️  Container 'qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' is not running
+
+   ✅ Cleanup complete
+
+🚀 Starting unim container with vllm engine...
+   Using tensor parallelism: 1 GPUs (30B model)
+================================================================================
+🚀 Starting Container: Qwen/Qwen3-30B-A3B-Thinking-2507
+   Engine: vllm
+================================================================================
+
+📁 Setting up cache directory: /localhome/local-tranminhq/dockers/.cache/unim
+   ✅ Cache directory ready
+
+🐳 Starting Docker container...
+   Container name: qwen-qwen3-30b-a3b-thinking-2507-unim-vllm
+   Port: 8000
+   GPU memory: 0.95
+
+✅ Container started successfully!
+   Container ID: 8a08607df4e101bbf0fba30c437f0e867304f09c3dc9458923047c951561d170
+
+⏳ Model is initializing... This may take several minutes.
+   Service URL: http://localhost:8000
+
+💡 Use 'python docker.py status --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-vllm' to check status
+   Use 'python docker.py logs --container-name qwen-qwen3-30b-a3b-thinking-2507-unim-vllm -f' to watch logs
+
+
+⏳ Waiting for service to be ready...
+   Step 1: Checking health endpoint: http://localhost:8000/v1/health/ready
+   Step 2: Verifying model is loaded: Qwen/Qwen3-30B-A3B-Thinking-2507
+   ⏳ Health check... (HTTP 000)
+   Still starting... (0s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (10s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (20s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (30s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (40s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (50s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (60s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (70s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (80s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (90s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (100s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (110s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (120s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (130s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (140s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (150s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (160s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (170s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (180s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (190s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (200s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (210s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (220s elapsed, HTTP 000)
+   ⏳ Health check... (HTTP 000)
+   Still starting... (230s elapsed, HTTP 000)
